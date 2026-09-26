@@ -3,7 +3,7 @@
 
 Viralense maps **sickness risk by city zone** so people can see where illness is spreading right now. It combines three signals:
 
-1. **Webcam vitals**: a 30-second face scan (Presage SmartSpectra) measures pulse, breathing rate and HRV, and scores them together with a couple of quick questions.
+1. **Webcam vitals**: a 30-second face scan in the browser measures pulse and breathing rate from tiny colour and brightness changes in the webcam image, then scores them together with a couple of quick questions. (The Presage SmartSpectra SDK is still supported as an optional upgrade.)
 2. **Self-reported symptoms**: a checklist anyone can fill in on their phone, no camera needed.
 3. **Cough & sneeze listener**: the laptop's built-in microphone listens in the browser and counts **coughs and sneezes** nearby.
 
@@ -37,6 +37,7 @@ Vitals scoring (`src/score.js`) and symptom scoring (`src/symptoms.js`) use the 
 ```
 server.mjs                  Express + WebSocket server, API, optional webcam SDK
 public/index.html           Web app (Leaflet map, heatmap, forms)
+public/vitals.js            In-browser pulse + breathing estimation from the webcam
 src/score.js                Vitals → risk score
 src/symptoms.js             Symptom checklist → risk score
 src/sensors.js              Validation for mic cough/sneeze batches
@@ -65,7 +66,7 @@ npm test
 |---|---|---|
 | `TIGER_DATABASE_URL` | optional | Tiger Data connection string. Leave out to use the local file |
 | `HASH_SALT` | recommended | Salt for hashing user IDs |
-| `SMARTSPECTRA_API_KEY` | for the webcam | Turns on webcam vitals. Without it the app still runs (symptoms + mic) |
+| `SMARTSPECTRA_API_KEY` | optional | Uses Presage's SDK for vitals instead of the built-in browser scan (Linux/macOS) |
 | `MIN_PEOPLE_PER_ZONE` | optional | Hide people counts in zones with fewer reports (default 1) |
 | `VITALS_WINDOW_DAYS` | optional | How far back people reports count (default 7) |
 | `SENSOR_WINDOW_HOURS` | optional | How far back mic counts count (default 24) |
@@ -76,6 +77,16 @@ npm test
 Open the page at **http://localhost:3000**: browsers only allow the mic and location on `localhost` or HTTPS. Close other apps that use the webcam (Zoom, FaceTime, etc.) before starting, or the SDK can't open it.
 
 If you later host it over HTTPS, live updates automatically use `wss://`.
+
+## Face scan (webcam)
+
+Press **Start 30-second face scan**, allow the camera, and keep your face in the oval. The page:
+
+1. Averages the skin colour in the dashed box on every frame. Each heartbeat changes it very slightly, and the POS method (Wang et al., 2017) turns that into a pulse signal.
+2. Tracks brightness below your face, which shifts slightly as your shoulders and chest move when you breathe.
+3. Finds the strongest rhythm in each signal, showing pulse after ~8 s and breathing after ~15 s, plus a signal-quality score.
+
+The video never leaves the page. Best results: steady light on your face (a window or lamp in front of you), no backlight, hold still, don't talk. It's a prototype estimate, not a medical measurement.
 
 ## Cough & sneeze listener
 
@@ -107,7 +118,7 @@ The WebSocket on the same port streams camera frames and vitals, and sends `zone
 
 1. `npm run db:seed` so the map has hotspots.
 2. `npm start`, open http://localhost:3000 and allow location.
-3. Sit in front of the webcam for 30 seconds, then submit the reading.
+3. Press **Start 30-second face scan**, hold still facing a light, then submit the reading.
 4. Press **Start listening** and cough a few times; watch the counter go up and your zone pick up a mic pin.
 5. Tick a couple of symptoms and press **Report symptoms**.
 6. Press **Add fake sick person nearby** a few times and watch your zone turn red.

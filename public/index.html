@@ -87,6 +87,14 @@
       #stats { grid-template-columns: repeat(2, 1fr); }
       #validation-hint { margin-left: 0; }
     }
+    #scan-wrap { position: relative; border-radius: 6px; overflow: hidden; background: #0a0b12; aspect-ratio: 4 / 3; }
+    #scan-canvas { width: 100%; height: 100%; display: block; transform: scaleX(-1); }
+    #scan-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 1rem; font-size: 0.8rem; color: #7a7f99; }
+    #scan-live { display: flex; gap: 1.25rem; margin: 0.6rem 0 0.4rem; }
+    #scan-live .v { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #a0d4ff; }
+    #scan-live .l { font-size: 0.72rem; color: #7a7f99; }
+    #scan-hint { font-size: 0.78rem; color: #ffd700; min-height: 1.1em; margin: 0.3rem 0; }
+    #scan-form { display: none; flex-direction: column; gap: 0.55rem; margin-top: 0.4rem; }
   </style>
 </head>
 <body>
@@ -101,6 +109,28 @@
 <main>
   <!-- Left panel: camera + metrics + forms -->
   <div id="left">
+
+    <div id="scan-card" class="card">
+      <div class="section-title">Face scan (webcam)</div>
+      <div id="scan-wrap">
+        <canvas id="scan-canvas" width="320" height="240"></canvas>
+        <div id="scan-empty">Your camera stays on this page — nothing is recorded or uploaded, only the final numbers.</div>
+      </div>
+      <div id="scan-live">
+        <div><div class="v"><span id="scan-bpm">--</span></div><div class="l">Pulse (bpm)</div></div>
+        <div><div class="v"><span id="scan-rpm">--</span></div><div class="l">Breathing (/min)</div></div>
+        <div><div class="v"><span id="scan-q">--</span></div><div class="l">Signal quality</div></div>
+      </div>
+      <progress id="scan-progress" max="30" value="0" style="width:100%;height:5px"></progress>
+      <div id="scan-hint"></div>
+      <button id="scan-btn" class="btn">📷 Start 30-second face scan</button>
+      <div id="scan-form" class="form-section">
+        <label><input type="checkbox" id="scan-exercised"> Exercised in the last 30 minutes?</label>
+        <label><input type="checkbox" id="scan-symptoms"> Cough, fever or sore throat?</label>
+        <button id="scan-submit" class="btn">Submit reading</button>
+      </div>
+      <div id="scan-result" class="result"></div>
+    </div>
 
     <div id="vitals-cards" style="display:none; flex-direction:column; gap:0.75rem;">
       <div class="card" style="padding:0.5rem">
@@ -194,6 +224,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<script src="vitals.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -353,8 +384,9 @@
 
   function setVitalsMode(on) {
     $('vitals-cards').style.display = on ? 'flex' : 'none';
+    $('scan-card').style.display    = on ? 'none' : 'block'; // server SDK has the camera
     const badge = $('mode-badge');
-    badge.textContent = on ? 'Webcam vitals live' : 'Self-report + mic';
+    badge.textContent = on ? 'Webcam vitals live (SDK)' : 'Browser webcam + mic';
     badge.classList.toggle('live', on);
   }
 
@@ -655,6 +687,125 @@
       micCount('cough', 3);
       await micSend();
       micLog('Sent 3 pretend coughs.');
+    });
+  });
+
+  // ── Browser face scan (webcam pulse + breathing, no SDK needed) ───────────
+  const SCAN_SECS = 30;
+  const scan = { stream: null, video: null, samples: [], start: 0, raf: 0, timer: 0, result: null, lastT: -1 };
+  const sctx = $('scan-canvas').getContext('2d', { willReadFrequently: true });
+  // Regions in the 320×240 canvas: skin (forehead + cheeks) and the area below the face
+  const FACE = { x: 125, y: 62, w: 70, h: 80 };
+  const BODY = { x: 80,  y: 196, w: 160, h: 40 };
+
+  function regionMeans(img, box) {
+    let r = 0, g = 0, b = 0, n = 0;
+    for (let y = box.y; y < box.y + box.h; y += 2) {
+      for (let x = box.x; x < box.x + box.w; x += 2) {
+        const i = (y * 320 + x) * 4;
+        r += img[i]; g += img[i + 1]; b += img[i + 2]; n++;
+      }
+    }
+    return { r: r / n, g: g / n, b: b / n };
+  }
+
+  function drawGuide(ok) {
+    sctx.strokeStyle = ok ? 'rgba(110,231,160,0.9)' : 'rgba(255,215,0,0.9)';
+    sctx.lineWidth = 2;
+    sctx.beginPath(); sctx.ellipse(160, 105, 62, 82, 0, 0, 2 * Math.PI); sctx.stroke();
+    sctx.setLineDash([4, 4]);
+    sctx.strokeRect(FACE.x, FACE.y, FACE.w, FACE.h);
+    sctx.setLineDash([]);
+  }
+
+  function scanFrame() {
+    scan.raf = requestAnimationFrame(scanFrame);
+    const v = scan.video;
+    if (!v || v.readyState < 2 || v.currentTime === scan.lastT) return;
+    scan.lastT = v.currentTime;
+    sctx.drawImage(v, 0, 0, 320, 240);
+    const img  = sctx.getImageData(0, 0, 320, 240).data;
+    const face = regionMeans(img, FACE);
+    const body = regionMeans(img, BODY);
+    const lum  = 0.299 * face.r + 0.587 * face.g + 0.114 * face.b;
+    const lit  = lum > 45 && lum < 235;
+    drawGuide(lit);
+    if (!lit) { $('scan-hint').textContent = lum <= 45 ? 'Too dark — face a lamp or window.' : 'Too bright — move out of direct light.'; return; }
+    scan.samples.push({ t: performance.now() / 1000, r: face.r, g: face.g, b: face.b,
+                        body: 0.299 * body.r + 0.587 * body.g + 0.114 * body.b });
+  }
+
+  function scanUpdate(final) {
+    const elapsed = (performance.now() - scan.start) / 1000;
+    $('scan-progress').value = Math.min(elapsed, SCAN_SECS);
+    const est = ViralenseVitals.estimate(scan.samples);
+    if (!est) { if (!final) $('scan-hint').textContent = 'Hold still with your face in the oval…'; return null; }
+    $('scan-bpm').textContent = est.pulseRate ? est.pulseRate.toFixed(0) : '--';
+    $('scan-rpm').textContent = est.breathingRate ? est.breathingRate.toFixed(0) : '…';
+    $('scan-q').textContent   = Math.round(est.pulseConf * 100) + '%';
+    if (!final) $('scan-hint').textContent = `Measuring… ${Math.floor(elapsed)} / ${SCAN_SECS} s — keep still`;
+    return est;
+  }
+
+  function stopCamera() {
+    cancelAnimationFrame(scan.raf); clearInterval(scan.timer);
+    scan.stream?.getTracks().forEach(t => t.stop());
+    scan.stream = null;
+  }
+
+  async function startScan() {
+    $('scan-result').style.display = 'none';
+    $('scan-form').style.display = 'none';
+    try {
+      scan.stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
+    } catch (e) {
+      $('scan-hint').textContent = e.name === 'NotReadableError'
+        ? 'The camera is busy — close Zoom/Teams/Camera app and try again.'
+        : 'Camera permission denied. Allow it in the browser and try again.';
+      return;
+    }
+    scan.video = Object.assign(document.createElement('video'), { muted: true, playsInline: true, srcObject: scan.stream });
+    await scan.video.play();
+    $('scan-empty').style.display = 'none';
+    scan.samples = []; scan.lastT = -1; scan.result = null;
+    scan.start = performance.now();
+    $('scan-btn').disabled = true; $('scan-btn').textContent = 'Scanning…';
+    scanFrame();
+    scan.timer = setInterval(() => {
+      if ((performance.now() - scan.start) / 1000 < SCAN_SECS) { scanUpdate(false); return; }
+      stopCamera();
+      scan.result = scanUpdate(true);
+      $('scan-btn').disabled = false; $('scan-btn').textContent = '📷 Scan again';
+      if (!scan.result || !scan.result.pulseRate || !scan.result.breathingRate) {
+        $('scan-hint').textContent = 'Not enough good video — sit in steady light, face in the oval, and scan again.';
+        return;
+      }
+      $('scan-hint').textContent = scan.result.pulseConf < 0.7
+        ? 'Weak signal — you can submit, but for a trusted reading face the light and hold still.'
+        : 'Done! Answer two quick questions and submit.';
+      $('scan-form').style.display = 'flex';
+    }, 1000);
+  }
+
+  $('scan-btn').addEventListener('click', startScan);
+
+  $('scan-submit').addEventListener('click', () => {
+    if (needLocation() || !scan.result) return;
+    const r = scan.result;
+    withBusy($('scan-submit'), 'Submitting…', async () => {
+      const result = await postJson('/readings', {
+        userId,
+        lat:               userLocation.lat,
+        lng:               userLocation.lng,
+        pulseRate:         r.pulseRate,
+        breathingRate:     r.breathingRate,
+        confidence:        r.pulseConf,
+        durationSec:       Math.round(r.durationSec),
+        exercisedRecently: $('scan-exercised').checked,
+        symptoms:          $('scan-symptoms').checked,
+      });
+      showResult($('scan-result'), result, { lowText: 'Reading looks normal', highText: 'High risk flagged' });
+      scheduleReload();
     });
   });
 </script>
