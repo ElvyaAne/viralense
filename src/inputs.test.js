@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { scoreSymptoms, validateSymptomReport } from './symptoms.js';
-import { validateSensorEvent, checkDeviceToken } from './sensors.js';
+import { validateSensorEvent } from './sensors.js';
 
 test('no symptoms — score 0, not stored', () => {
   const r = scoreSymptoms([]);
@@ -36,11 +36,4 @@ test('sensor event validation', () => {
   assert.match(validateSensorEvent({ ...ok, footTraffic: 1.5 }), /footTraffic/);
   assert.match(validateSensorEvent({ ...ok, windowSec: 0 }), /windowSec/);
   assert.match(validateSensorEvent({ ...ok, deviceId: '' }), /deviceId/);
-});
-
-test('device token is only enforced when configured', () => {
-  assert.equal(checkDeviceToken(undefined, ''), true);
-  assert.equal(checkDeviceToken('secret', 'secret'), true);
-  assert.equal(checkDeviceToken('nope', 'secret'), false);
-  assert.equal(checkDeviceToken(undefined, 'secret'), false);
 });

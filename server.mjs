@@ -6,7 +6,7 @@ import { createHash } from 'crypto';
 import { pool } from './src/db.js';
 import { scoreReading } from './src/score.js';
 import { validateSymptomReport, scoreSymptoms, SYMPTOM_LABELS } from './src/symptoms.js';
-import { validateSensorEvent, checkDeviceToken } from './src/sensors.js';
+import { validateSensorEvent } from './src/sensors.js';
 import { aggregateZones, ZONE_DEFAULTS } from './src/zones.js';
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -16,7 +16,6 @@ const CELL_DEG      = Number(process.env.ZONE_CELL_DEG ?? ZONE_DEFAULTS.CELL_DEG
 const MIN_PEOPLE    = Number(process.env.MIN_PEOPLE_PER_ZONE ?? 1);
 const VITALS_DAYS   = Number(process.env.VITALS_WINDOW_DAYS ?? 7);
 const SENSOR_HOURS  = Number(process.env.SENSOR_WINDOW_HOURS ?? 24);
-const SENSOR_TOKEN  = process.env.SENSOR_TOKEN ?? '';
 const DEDUP_HOURS   = 12;
 
 // ── Express + WebSocket ───────────────────────────────────────────────────────
@@ -38,7 +37,7 @@ function broadcast(data) {
 // ── Live webcam vitals (optional) ─────────────────────────────────────────────
 // The SmartSpectra SDK reads the webcam attached to the machine running this
 // server. On a cloud host (Vultr) there is no webcam, so the app runs in
-// "self-report + sensors" mode instead of crashing.
+// "self-report + mic" mode instead of crashing.
 
 let latestStatus = 'Camera offline — self-report mode';
 let vitalsEnabled = false;
@@ -47,7 +46,7 @@ let sdk = null;
 async function startVitals() {
   const apiKey = process.env.SMARTSPECTRA_API_KEY;
   if (!apiKey || process.env.DISABLE_CAMERA === '1') {
-    console.log('Webcam vitals disabled (no SMARTSPECTRA_API_KEY or DISABLE_CAMERA=1). Running in self-report + sensor mode.');
+    console.log('Webcam vitals disabled (no SMARTSPECTRA_API_KEY or DISABLE_CAMERA=1). Running in self-report + mic mode.');
     return;
   }
 
@@ -307,11 +306,8 @@ app.post('/symptom-reports', async (req, res) => {
   }
 });
 
-// Batches from the Raspberry Pi room sensors (mic coughs/sneezes + IR foot traffic)
+// Batches of cough/sneeze counts from the in-browser laptop mic listener
 app.post('/sensor-events', async (req, res) => {
-  if (!checkDeviceToken(req.get('x-device-token'), SENSOR_TOKEN)) {
-    return res.status(401).json({ error: 'invalid device token' });
-  }
   const validErr = validateSensorEvent(req.body);
   if (validErr) return res.status(400).json({ error: validErr });
 
@@ -363,7 +359,7 @@ async function fetchSensorRows() {
   return rows;
 }
 
-// Combined zone heatmap: vitals + self-reports + room sensors
+// Combined zone heatmap: vitals + self-reports + mic cough counts
 app.get('/zones', async (_req, res) => {
   try {
     const [riskRows, sensorRows] = await Promise.all([fetchRiskRows(), fetchSensorRows()]);

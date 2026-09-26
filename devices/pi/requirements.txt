@@ -1,5 +1,0 @@
-pyserial>=3.5
-numpy>=1.24
-sounddevice>=0.4
-# optional, for much better cough/sneeze detection (see README):
-# ai-edge-litert
