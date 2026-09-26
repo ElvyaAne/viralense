@@ -29,7 +29,7 @@ export const SYMPTOM_LABELS = Object.freeze({
 
 // A report at or above this score is stored on the map.
 export const STORE_MIN_SCORE = 2;
-// Same bar as vitals readings.
+// Score at which a report counts as high risk.
 export const HIGH_RISK_SCORE = 4;
 
 export function validateSymptomReport(body) {

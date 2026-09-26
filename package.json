@@ -1,7 +1,8 @@
 {
   "name": "viralense",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
+  "engines": { "node": ">=20" },
   "scripts": {
     "start":   "node server.mjs",
     "db:init": "node db/init.js",
@@ -13,9 +14,5 @@
     "express": "^4.21.0",
     "pg":      "^8.13.0",
     "ws":      "^8.18.0"
-  },
-  "optionalDependencies": {
-    "@smartspectra/node-sdk": "latest",
-    "sharp":   "^0.33.0"
   }
 }

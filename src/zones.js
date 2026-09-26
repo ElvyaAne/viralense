@@ -1,5 +1,5 @@
 // Combines the three signals into one risk index (0–100) per map zone:
-//   1. people flagged sick in the zone (webcam vitals or self-reported symptoms)
+//   1. people reporting symptoms in the zone
 //   2. how severe those flags were (average score)
 //   3. coughs + sneezes heard by room sensors, relative to foot traffic
 
