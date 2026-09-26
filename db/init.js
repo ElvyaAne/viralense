@@ -2,17 +2,16 @@ import 'dotenv/config';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import pg from 'pg';
 
-const { Client } = pg;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-if (!process.env.TIGER_DATABASE_URL) {
-  console.error('Error: TIGER_DATABASE_URL environment variable not set.');
-  process.exit(1);
+if (!process.env.TIGER_DATABASE_URL || process.env.TIGER_DATABASE_URL.includes('YOUR_PASSWORD')) {
+  console.log('No TIGER_DATABASE_URL set — nothing to set up. Viralense will save data to a local file (data/viralense-data.json).');
+  process.exit(0);
 }
 
-const client = new Client({ connectionString: process.env.TIGER_DATABASE_URL });
+const { default: pg } = await import('pg');
+const client = new pg.Client({ connectionString: process.env.TIGER_DATABASE_URL });
 await client.connect();
 console.log('Connected. Applying schema...');
 
