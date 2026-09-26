@@ -69,7 +69,15 @@
 
     .leaflet-popup-content { font-size: 0.82rem; line-height: 1.5; }
     .pop-level { font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.05em; }
-    .mic-pin { background: #7c8aff; border: 2px solid #fff; border-radius: 50%; width: 14px; height: 14px; box-shadow: 0 0 0 3px rgba(124,138,255,0.35); }
+    /* Pulsing mic dots: colour and pulse speed come from recent coughs + sneezes */
+    .pulse { position: relative; width: 18px; height: 18px; }
+    .pulse .core { position: absolute; inset: 2px; border-radius: 50%; background: var(--c); border: 2px solid #fff; box-shadow: 0 0 6px var(--c); }
+    .pulse .ring { position: absolute; inset: 0; border-radius: 50%; background: var(--c);
+                   animation: mic-pulse var(--dur) ease-out infinite; }
+    .pulse .ring.late { animation-delay: calc(var(--dur) / 2); }
+    @keyframes mic-pulse { 0% { transform: scale(1); opacity: 0.75; } 100% { transform: scale(var(--grow)); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .pulse .ring { animation: none; opacity: 0.35; transform: scale(1.8); } }
+    .legend-pulse { display: inline-block; vertical-align: middle; margin-right: 4px; transform: scale(0.7); }
 
     @media (max-width: 900px) {
       main { flex-direction: column; overflow: visible; }
@@ -150,7 +158,7 @@
         <span><span class="ldot" style="background:#ffd700"></span>Low (index &lt; 30)</span>
         <span><span class="ldot" style="background:#ff8c00"></span>Elevated (30–59)</span>
         <span><span class="ldot" style="background:#dc143c"></span>High (60+)</span>
-        <span><span class="ldot" style="background:#7c8aff;border-radius:50%"></span>Mic listener</span>
+        <span id="mic-legend">Mic dots: <span id="mic-legend-items"></span></span>
       </div>
     </div>
   </div>
@@ -210,6 +218,23 @@
 
   const LEVEL_COLOR = { high: '#dc143c', elevated: '#ff8c00', low: '#ffd700', none: '#666' };
 
+  // Mic dots: busier mics pulse faster and wider
+  const MIC_STYLE = {
+    green:  { color: '#22c55e', dur: 2.6, label: 'Quiet' },
+    yellow: { color: '#facc15', dur: 1.6, label: 'Some coughing' },
+    red:    { color: '#ef4444', dur: 0.9, label: 'Lots of coughing' },
+  };
+  function pulseIcon(level, recent, m) {
+    const st   = MIC_STYLE[level];
+    const grow = Math.min(6, 2.2 + 3.8 * Math.min(1, recent / (m.redAt * 1.5))).toFixed(2);
+    const html = `<div class="pulse" style="--c:${st.color};--dur:${st.dur}s;--grow:${grow}">` +
+                 `<div class="ring"></div><div class="ring late"></div><div class="core"></div></div>`;
+    return L.divIcon({ className: '', html, iconSize: [18, 18], iconAnchor: [9, 9] });
+  }
+  const legendDot = (level) =>
+    `<span class="legend-pulse"><span class="pulse" style="display:inline-block;--c:${MIC_STYLE[level].color};--dur:${MIC_STYLE[level].dur}s;--grow:2">` +
+    `<span class="ring" style="display:block"></span><span class="core" style="display:block"></span></span></span>`;
+
   async function loadZones() {
     let data;
     try {
@@ -233,14 +258,19 @@
         .bindPopup(lines.join('<br>')).addTo(zoneLayer);
     });
 
-    const pin = L.divIcon({ className: '', html: '<div class="mic-pin"></div>', iconSize: [14, 14], iconAnchor: [7, 7] });
+    const m = data.mic;
     data.devices.forEach(d => {
-      L.marker([d.lat, d.lng], { icon: pin }).bindPopup(
-        `<b>Mic listener</b> <span class="muted">${esc(d.deviceId)}</span><br>` +
+      const recent = d.recentCoughs + d.recentSneezes;
+      L.marker([d.lat, d.lng], { icon: pulseIcon(d.level, recent, m), zIndexOffset: 500 }).bindPopup(
+        `<b style="color:${MIC_STYLE[d.level].color}">● ${MIC_STYLE[d.level].label}</b> mic listener <span class="muted">${esc(d.deviceId)}</span><br>` +
+        `Last ${m.windowMin} min: <b>${d.recentCoughs}</b> coughs, <b>${d.recentSneezes}</b> sneezes<br>` +
         `Last ${data.sensorHours} h: ${d.coughs} coughs, ${d.sneezes} sneezes<br>` +
         `<span class="muted">Last report: ${new Date(d.lastSeen).toLocaleString()}</span>`
       ).addTo(micLayer);
     });
+    $('mic-legend-items').innerHTML =
+      `${legendDot('green')}0–${m.yellowAt - 1} &nbsp;${legendDot('yellow')}${m.yellowAt}–${m.redAt - 1} &nbsp;` +
+      `${legendDot('red')}${m.redAt}+ coughs &amp; sneezes in ${m.windowMin} min`;
 
     $('s-zones').textContent     = data.zones.length;
     $('s-high').textContent      = data.zones.filter(z => z.level === 'high').length;

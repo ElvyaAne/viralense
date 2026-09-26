@@ -129,3 +129,12 @@ export function aggregateZones(riskRows, sensorRows, { cellDeg = ZONE_DEFAULTS.C
   zones.sort((a, b) => b.index - a.index);
   return zones;
 }
+
+// Colour for a mic's map dot, from coughs + sneezes heard in the recent window.
+export const MIC_LEVELS = Object.freeze({ WINDOW_MIN: 30, YELLOW_AT: 3, RED_AT: 8 });
+
+export function micLevel(recentCount, cfg = MIC_LEVELS) {
+  if (recentCount >= cfg.RED_AT)    return 'red';
+  if (recentCount >= cfg.YELLOW_AT) return 'yellow';
+  return 'green';
+}

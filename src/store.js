@@ -190,9 +190,9 @@ export async function createPgStore(connectionString) {
           SUM(foot_traffic)::int                 AS "footTraffic",
           MAX(time)                              AS "lastSeen"
         FROM sensor_events
-        WHERE time > NOW() - make_interval(hours => $1::int)
+        WHERE time > NOW() - make_interval(secs => $1::double precision)
         GROUP BY device_id
-      `, [hours]);
+      `, [hours * 3600]);
       return rows;
     },
 

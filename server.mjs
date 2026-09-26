@@ -6,7 +6,7 @@ import { createHash } from 'crypto';
 import { createStore } from './src/store.js';
 import { validateSymptomReport, scoreSymptoms, SYMPTOM_LABELS } from './src/symptoms.js';
 import { validateSensorEvent } from './src/sensors.js';
-import { aggregateZones, ZONE_DEFAULTS } from './src/zones.js';
+import { aggregateZones, micLevel, ZONE_DEFAULTS, MIC_LEVELS } from './src/zones.js';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -20,6 +20,12 @@ const SENSOR_HOURS = Number(process.env.SENSOR_WINDOW_HOURS ?? 24);
 const DEFAULT_LAT  = Number(process.env.DEFAULT_LAT ?? 45.4231);   // uOttawa
 const DEFAULT_LNG  = Number(process.env.DEFAULT_LNG ?? -75.6831);
 const DEDUP_HOURS  = 12;
+// Mic dots: coughs + sneezes in the last MIC_WINDOW_MIN minutes decide the colour
+const MIC_CFG = {
+  WINDOW_MIN: Number(process.env.MIC_WINDOW_MIN ?? MIC_LEVELS.WINDOW_MIN),
+  YELLOW_AT:  Number(process.env.MIC_YELLOW_AT  ?? MIC_LEVELS.YELLOW_AT),
+  RED_AT:     Number(process.env.MIC_RED_AT     ?? MIC_LEVELS.RED_AT),
+};
 
 const store = await createStore();
 console.log(`Storing data in: ${store.describe}`);
@@ -110,22 +116,36 @@ app.post('/sensor-events', async (req, res) => {
 // Combined zone heatmap: symptom reports + mic cough counts
 app.get('/zones', async (_req, res) => {
   try {
-    const [riskRows, sensorRows] = await Promise.all([store.riskRows(REPORT_DAYS), store.sensorRows(SENSOR_HOURS)]);
-    const zones = aggregateZones(riskRows, sensorRows, { cellDeg: CELL_DEG, minPeople: MIN_PEOPLE });
+    const [riskRows, sensorRows, recentRows] = await Promise.all([
+      store.riskRows(REPORT_DAYS),
+      store.sensorRows(SENSOR_HOURS),
+      store.sensorRows(MIC_CFG.WINDOW_MIN / 60),
+    ]);
+    const zones  = aggregateZones(riskRows, sensorRows, { cellDeg: CELL_DEG, minPeople: MIN_PEOPLE });
+    const recent = new Map(recentRows.map(r => [r.deviceId, r]));
     res.json({
       cellDeg:     CELL_DEG,
       minPeople:   MIN_PEOPLE,
       reportDays:  REPORT_DAYS,
       sensorHours: SENSOR_HOURS,
+      mic:         { windowMin: MIC_CFG.WINDOW_MIN, yellowAt: MIC_CFG.YELLOW_AT, redAt: MIC_CFG.RED_AT },
       zones,
-      devices: sensorRows.map(s => ({
-        deviceId: s.deviceId,
-        lat:      Number(s.lat),
-        lng:      Number(s.lng),
-        coughs:   Number(s.coughs),
-        sneezes:  Number(s.sneezes),
-        lastSeen: s.lastSeen,
-      })),
+      devices: sensorRows.map(s => {
+        const r = recent.get(s.deviceId);
+        const recentCoughs  = r ? Number(r.coughs)  : 0;
+        const recentSneezes = r ? Number(r.sneezes) : 0;
+        return {
+          deviceId: s.deviceId,
+          lat:      Number(s.lat),
+          lng:      Number(s.lng),
+          coughs:   Number(s.coughs),
+          sneezes:  Number(s.sneezes),
+          recentCoughs,
+          recentSneezes,
+          level:    micLevel(recentCoughs + recentSneezes, MIC_CFG),
+          lastSeen: s.lastSeen,
+        };
+      }),
     });
   } catch (e) {
     console.error('[db] zones error:', e.message);

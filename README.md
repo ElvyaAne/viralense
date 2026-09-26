@@ -24,6 +24,18 @@ Viralense is a **live sickness-risk map**. It listens for **coughs and sneezes**
 
 60+ is **high**, 30–59 **elevated**, anything above 0 **low**. Symptom scores: fever, shortness of breath, and loss of taste/smell count 2; other symptoms count 1. See [`src/zones.js`](src/zones.js) and [`src/symptoms.js`](src/symptoms.js).
 
+## Mic dots on the map
+
+Every open listener shows up as a **pulsing dot** where it is, coloured by the coughs + sneezes it heard in the **last 30 minutes**:
+
+| Colour | Coughs + sneezes in 30 min |
+|---|---|
+| 🟢 Green | 0–2, quiet |
+| 🟡 Yellow | 3–7, some coughing |
+| 🔴 Red | 8+, lots of coughing |
+
+Busier dots pulse faster and wider. Click a dot for its counts. The window and thresholds can be changed with `MIC_WINDOW_MIN`, `MIC_YELLOW_AT` and `MIC_RED_AT` in `.env`.
+
 ## How cough detection works
 
 The listener learns the room's background noise for a second, then looks for **short, loud, isolated bursts** (0.1–1 s, well above background). Longer, brighter bursts count as sneezes, the rest as coughs; low thuds and continuous speech are ignored. It's a simple loudness-and-pitch detector: good for a demo, but a clap or a door slam can fool it.
@@ -67,6 +79,8 @@ If the page doesn't load, check that the Vultr firewall group allows ports 80 an
 | `REPORT_WINDOW_DAYS` | 7 | How far back symptom reports count |
 | `SENSOR_WINDOW_HOURS` | 24 | How far back cough counts count |
 | `ZONE_CELL_DEG` | 0.005 | Zone size in degrees (≈500 m) |
+| `MIC_WINDOW_MIN` | 30 | Minutes of coughs + sneezes that decide a mic dot's colour |
+| `MIC_YELLOW_AT`, `MIC_RED_AT` | 3, 8 | Counts at which a mic dot turns yellow / red |
 
 ## API
 
@@ -98,7 +112,7 @@ deploy/setup-vultr.sh   One-command server setup
 
 ## Demo script
 
-1. `npm run db:seed` so the map has hotspots.
+1. `npm run db:seed` so the map has hotspots and three mic dots (red, yellow, green).
 2. Open the site, press **Start listening**, and cough a few times. Watch the counter go up, then "✓ Sent … to the map" a few seconds later, with your zone lighting up.
 3. Tick a couple of symptoms and press **Report symptoms**.
 4. Press **Add a fake sick person nearby** a few times and watch your zone turn red.
