@@ -445,6 +445,7 @@
         symptoms:          $('symptoms').checked,
       });
       showResult($('vitals-result'), result, { lowText: 'Normal reading', highText: 'High risk flagged' });
+      scheduleReload();
     });
   });
 
@@ -468,6 +469,7 @@
       });
       const lowText = result.store ? 'Mild symptoms recorded' : 'Thanks — nothing to flag';
       showResult($('report-result'), result, { lowText, highText: 'Symptoms flagged' });
+      scheduleReload();
     });
   });
 
@@ -490,6 +492,7 @@
         symptoms:          true,
       });
       showResult($('report-result'), result, { lowText: 'Fake person not flagged', highText: 'Fake sick person added' });
+      scheduleReload();
     });
   });
 
@@ -538,6 +541,7 @@
       });
       if (r.error) throw new Error(r.error);
       mic.windowStart = now;
+      if (coughs + sneezes) scheduleReload();
     } catch (e) {
       mic.pendingCoughs += coughs; mic.pendingSneezes += sneezes; // retry next time
       micRender();

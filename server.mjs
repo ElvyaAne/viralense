@@ -3,7 +3,7 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import { createHash } from 'crypto';
-import { pool } from './src/db.js';
+import { createStore } from './src/store.js';
 import { scoreReading } from './src/score.js';
 import { validateSymptomReport, scoreSymptoms, SYMPTOM_LABELS } from './src/symptoms.js';
 import { validateSensorEvent } from './src/sensors.js';
@@ -17,6 +17,9 @@ const MIN_PEOPLE    = Number(process.env.MIN_PEOPLE_PER_ZONE ?? 1);
 const VITALS_DAYS   = Number(process.env.VITALS_WINDOW_DAYS ?? 7);
 const SENSOR_HOURS  = Number(process.env.SENSOR_WINDOW_HOURS ?? 24);
 const DEDUP_HOURS   = 12;
+
+const store = await createStore();
+console.log(`Storing data in: ${store.describe}`);
 
 // ── Express + WebSocket ───────────────────────────────────────────────────────
 
@@ -226,19 +229,11 @@ function validateReading(body) {
 // Stores one risk event per person per DEDUP_HOURS. Returns true if a row was written.
 async function storeRiskEvent({ userId, lat, lng, score, pulseRate = null, breathingRate = null, hrvMs = null, source }) {
   const userHash = hashUser(userId);
-  const dedup = await pool.query(
-    `SELECT 1 FROM risk_events
-     WHERE user_hash = $1 AND time > NOW() - make_interval(hours => $2::int)
-     LIMIT 1`,
-    [userHash, DEDUP_HOURS],
-  );
-  if (dedup.rows.length) return false;
-
-  await pool.query(
-    `INSERT INTO risk_events (time, user_hash, location, score, pulse_rate, breathing_rate, hrv_ms, source)
-     VALUES (NOW(), $1, ST_SetSRID(ST_MakePoint($3, $2), 4326)::geography, $4, $5, $6, $7, $8)`,
-    [userHash, roundCoord(lat), roundCoord(lng), score, pulseRate, breathingRate, hrvMs, source],
-  );
+  if (await store.hasRecentRiskEvent(userHash, DEDUP_HOURS)) return false;
+  await store.insertRiskEvent({
+    userHash, lat: roundCoord(lat), lng: roundCoord(lng), score,
+    pulseRate, breathingRate, hrvMs, source,
+  });
   broadcast({ type: 'zones-updated' });
   return true;
 }
@@ -247,8 +242,8 @@ async function storeRiskEvent({ userId, lat, lng, score, pulseRate = null, breat
 
 app.get('/health', async (_req, res) => {
   let db = false;
-  try { await pool.query('SELECT 1'); db = true; } catch { /* db down */ }
-  res.json({ ok: true, db, vitals: vitalsEnabled });
+  try { db = await store.ping(); } catch { /* db down */ }
+  res.json({ ok: true, db, storage: store.kind, vitals: vitalsEnabled });
 });
 
 // Webcam vitals reading (from the SmartSpectra measurement)
@@ -313,11 +308,7 @@ app.post('/sensor-events', async (req, res) => {
 
   const { deviceId, lat, lng, windowSec, coughs, sneezes, footTraffic } = req.body;
   try {
-    await pool.query(
-      `INSERT INTO sensor_events (time, device_id, lat, lng, window_sec, coughs, sneezes, foot_traffic)
-       VALUES (NOW(), $1, $2, $3, $4, $5, $6, $7)`,
-      [deviceId, lat, lng, windowSec, coughs, sneezes, footTraffic],
-    );
+    await store.insertSensorEvent({ deviceId, lat, lng, windowSec, coughs, sneezes, footTraffic });
     broadcast({ type: 'zones-updated' });
     res.json({ ok: true });
   } catch (e) {
@@ -326,43 +317,10 @@ app.post('/sensor-events', async (req, res) => {
   }
 });
 
-async function fetchRiskRows() {
-  const { rows } = await pool.query(`
-    SELECT
-      ST_Y(location::geometry) AS lat,
-      ST_X(location::geometry) AS lng,
-      user_hash                AS "userHash",
-      MAX(score)               AS score,
-      MAX(time)                AS time,
-      MIN(source)              AS source
-    FROM risk_events
-    WHERE time > NOW() - make_interval(days => $1::int)
-    GROUP BY ST_Y(location::geometry), ST_X(location::geometry), user_hash
-  `, [VITALS_DAYS]);
-  return rows;
-}
-
-async function fetchSensorRows() {
-  const { rows } = await pool.query(`
-    SELECT
-      device_id                              AS "deviceId",
-      (array_agg(lat ORDER BY time DESC))[1] AS lat,
-      (array_agg(lng ORDER BY time DESC))[1] AS lng,
-      SUM(coughs)::int                       AS coughs,
-      SUM(sneezes)::int                      AS sneezes,
-      SUM(foot_traffic)::int                 AS "footTraffic",
-      MAX(time)                              AS "lastSeen"
-    FROM sensor_events
-    WHERE time > NOW() - make_interval(hours => $1::int)
-    GROUP BY device_id
-  `, [SENSOR_HOURS]);
-  return rows;
-}
-
 // Combined zone heatmap: vitals + self-reports + mic cough counts
 app.get('/zones', async (_req, res) => {
   try {
-    const [riskRows, sensorRows] = await Promise.all([fetchRiskRows(), fetchSensorRows()]);
+    const [riskRows, sensorRows] = await Promise.all([store.riskRows(VITALS_DAYS), store.sensorRows(SENSOR_HOURS)]);
     const zones = aggregateZones(riskRows, sensorRows, { cellDeg: CELL_DEG, minPeople: MIN_PEOPLE });
     res.json({
       cellDeg:     CELL_DEG,
@@ -386,28 +344,11 @@ app.get('/zones', async (_req, res) => {
   }
 });
 
-// Original endpoint, kept for anything already using it
+// Original people-only endpoint, kept for anything already using it
 app.get('/risk-areas', async (_req, res) => {
   try {
-    const { rows } = await pool.query(`
-      SELECT
-        ST_Y(ST_SnapToGrid(location::geometry, 0.005)) AS lat,
-        ST_X(ST_SnapToGrid(location::geometry, 0.005)) AS lng,
-        COUNT(DISTINCT user_hash)                       AS people,
-        AVG(score)                                      AS "avgScore",
-        MAX(time)                                       AS "lastSeen"
-      FROM risk_events
-      WHERE time > NOW() - INTERVAL '7 days'
-      GROUP BY ST_SnapToGrid(location::geometry, 0.005)
-      HAVING COUNT(DISTINCT user_hash) >= $1
-    `, [MIN_PEOPLE]);
-    res.json(rows.map(r => ({
-      lat:      r.lat,
-      lng:      r.lng,
-      people:   Number(r.people),
-      avgScore: parseFloat(r.avgScore),
-      lastSeen: r.lastSeen,
-    })));
+    const zones = aggregateZones(await store.riskRows(VITALS_DAYS), [], { cellDeg: CELL_DEG, minPeople: MIN_PEOPLE });
+    res.json(zones.map(z => ({ lat: z.lat, lng: z.lng, people: z.people, avgScore: z.avgScore, lastSeen: z.lastSeen })));
   } catch (e) {
     console.error('[db] risk-areas error:', e.message);
     res.status(500).json({ error: 'Database error' });
@@ -417,7 +358,14 @@ app.get('/risk-areas', async (_req, res) => {
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 await startVitals();
-server.listen(PORT, () => console.log(`Viralense running at http://localhost:${PORT}`));
+server.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use — is Viralense already running in another window? Close it, or set PORT=3001 in .env.`);
+    process.exit(1);
+  }
+  throw e;
+});
+server.listen(PORT, () => console.log(`\nViralense running at http://localhost:${PORT}  ← open this in Chrome or Edge`));
 
 process.on('uncaughtException', (err) => {
   console.error('\n[crash] Uncaught exception:', err.message);
@@ -427,6 +375,7 @@ process.on('uncaughtException', (err) => {
 
 process.on('SIGINT', async () => {
   console.log('\nStopping...');
+  await store.flush().catch(() => {});
   if (sdk) {
     await sdk.stopAsync();
     await sdk.destroy();

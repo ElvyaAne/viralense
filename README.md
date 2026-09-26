@@ -41,28 +41,29 @@ src/score.js                Vitals → risk score
 src/symptoms.js             Symptom checklist → risk score
 src/sensors.js              Validation for mic cough/sneeze batches
 src/zones.js                Combines everything into per-zone risk
+src/store.js                Storage: Tiger Data or local JSON file
 db/schema.sql               TimescaleDB + PostGIS schema
 db/seed.js                  Demo data generator
 ```
 
 ## Running it on your laptop
 
-Run the server **on the laptop whose webcam and mic you want to use**: the webcam SDK reads the camera of the machine running the server, and the mic listener runs in the browser. Requires Node 20+ and a Tiger Data (TimescaleDB) database with PostGIS.
+Run it **on the laptop whose webcam and mic you want to use**. You only need Node 20+.
 
 ```bash
 npm install
-# create a .env file first (see the table below)
-npm run db:init             # create tables (safe to re-run; also upgrades old DBs)
-npm run db:seed             # optional: demo data around uOttawa
-npm start                   # then open http://localhost:3000
+npm run db:seed    # optional: demo hotspots around uOttawa
+npm start          # then open http://localhost:3000 in Chrome or Edge
 npm test
 ```
+
+**No database needed.** Without a `TIGER_DATABASE_URL`, everything is saved to `data/viralense-data.json` on your laptop and kept between restarts. To use Tiger Data (TimescaleDB) instead, add the URL to `.env` and run `npm run db:init` once. If the database can't be reached, the app falls back to the local file instead of crashing.
 
 `.env` settings:
 
 | Variable | Needed? | What it does |
 |---|---|---|
-| `TIGER_DATABASE_URL` | yes | Postgres connection string |
+| `TIGER_DATABASE_URL` | optional | Tiger Data connection string. Leave out to use the local file |
 | `HASH_SALT` | recommended | Salt for hashing user IDs |
 | `SMARTSPECTRA_API_KEY` | for the webcam | Turns on webcam vitals. Without it the app still runs (symptoms + mic) |
 | `MIN_PEOPLE_PER_ZONE` | optional | Hide people counts in zones with fewer reports (default 1) |
@@ -98,7 +99,7 @@ It's a simple loudness-and-pitch detector, good enough for a demo but a clap or 
 | `POST` | `/sensor-events` | Mic counts: `deviceId, lat, lng, windowSec, coughs, sneezes, footTraffic` (always 0 for now) |
 | `GET` | `/zones` | Combined zones with risk index, signals and mic listeners |
 | `GET` | `/risk-areas` | Original people-only endpoint (kept for compatibility) |
-| `GET` | `/health` | `{ ok, db, vitals }` |
+| `GET` | `/health` | `{ ok, db, storage, vitals }` |
 
 The WebSocket on the same port streams camera frames and vitals, and sends `zones-updated` whenever new data arrives so every open map refreshes live.
 
