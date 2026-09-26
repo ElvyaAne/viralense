@@ -1,4 +1,4 @@
-// Validation for batches posted by the Raspberry Pi sensor client.
+// Validation for cough/sneeze batches posted by the in-browser mic listener.
 
 const MAX_WINDOW_SEC = 3600;
 const MAX_COUNT      = 100_000;
@@ -19,10 +19,4 @@ export function validateSensorEvent(body) {
   if (!isCount(sneezes))     return 'sneezes must be a non-negative integer';
   if (!isCount(footTraffic)) return 'footTraffic must be a non-negative integer';
   return null;
-}
-
-// If SENSOR_TOKEN is set, devices must send it in the x-device-token header.
-export function checkDeviceToken(headerValue, expected) {
-  if (!expected) return true;
-  return typeof headerValue === 'string' && headerValue === expected;
 }

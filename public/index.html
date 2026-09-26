@@ -73,6 +73,14 @@
     .pop-level { font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.05em; }
     .sensor-pin { background: #7c8aff; border: 2px solid #fff; border-radius: 50%; width: 14px; height: 14px; box-shadow: 0 0 0 3px rgba(124,138,255,0.35); }
 
+    .mic-counts { display: flex; gap: 1.25rem; margin: 0.6rem 0; }
+    .mic-counts .v { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #e0e4ff; }
+    .mic-counts .l { font-size: 0.72rem; color: #7a7f99; }
+    #mic-meter { height: 6px; background: #2d3148; border-radius: 3px; overflow: hidden; margin-bottom: 0.4rem; }
+    #mic-level { height: 100%; width: 0; background: #6ee7a0; transition: width 60ms linear; }
+    #mic-level.hot { background: #f87171; }
+    #mic-log { font-size: 0.75rem; color: #a0a8d0; min-height: 1.1em; margin-top: 0.45rem; }
+
     @media (max-width: 900px) {
       main { flex-direction: column; overflow: visible; }
       #left { width: 100%; overflow: visible; }
@@ -126,6 +134,19 @@
     </div>
 
     <div class="card">
+      <div class="section-title">Cough &amp; sneeze listener</div>
+      <p class="muted">Uses your computer's microphone. Sound is analysed live in this tab and never recorded or uploaded, only the counts. Coughs are ignored while the webcam sees you talking.</p>
+      <div class="mic-counts">
+        <div><div class="v" id="mic-coughs">0</div><div class="l">Coughs</div></div>
+        <div><div class="v" id="mic-sneezes">0</div><div class="l">Sneezes</div></div>
+        <div><div class="v" id="mic-pending">0</div><div class="l">Not sent yet</div></div>
+      </div>
+      <div id="mic-meter"><div id="mic-level"></div></div>
+      <button id="mic-btn" class="btn">🎙️ Start listening</button>
+      <div id="mic-log"></div>
+    </div>
+
+    <div class="card">
       <div class="section-title">How are you feeling?</div>
       <p class="muted" style="margin-bottom:0.7rem">No camera needed. Tick anything you have right now. Only an anonymous, ~100&nbsp;m-rounded location is stored, and only if you have symptoms.</p>
       <div id="symptom-grid" class="symptom-grid"></div>
@@ -137,6 +158,7 @@
       <div class="section-title">Demo tools</div>
       <p class="muted" style="margin-bottom:0.3rem">Adds a made-up sick person near you so you can watch the map react.</p>
       <button id="fake-sick-btn" class="btn btn-demo">🧪 Add fake sick person nearby</button>
+      <button id="fake-cough-btn" class="btn btn-demo">🤧 Pretend the mic heard 3 coughs</button>
     </div>
 
   </div>
@@ -156,7 +178,7 @@
         <div class="toggles">
           <label><input type="checkbox" id="t-heat" checked> Heatmap</label>
           <label><input type="checkbox" id="t-zones" checked> Zones</label>
-          <label><input type="checkbox" id="t-sensors" checked> Room sensors</label>
+          <label><input type="checkbox" id="t-sensors" checked> Mics</label>
         </div>
       </div>
       <div id="map"></div>
@@ -164,7 +186,7 @@
         <span><span class="ldot" style="background:#ffd700"></span>Low (index &lt; 30)</span>
         <span><span class="ldot" style="background:#ff8c00"></span>Elevated (30–59)</span>
         <span><span class="ldot" style="background:#dc143c"></span>High (60+)</span>
-        <span><span class="ldot" style="background:#7c8aff;border-radius:50%"></span>Room sensor (mic + IR)</span>
+        <span><span class="ldot" style="background:#7c8aff;border-radius:50%"></span>Laptop mic listener</span>
       </div>
     </div>
   </div>
@@ -233,7 +255,7 @@
         `<span class="pop-level" style="color:${color}">${z.level} risk</span> · index <b>${z.index}</b>/100`,
         z.people ? `<b>${z.people}</b> ${z.people === 1 ? 'person' : 'people'} flagged (avg score ${z.avgScore})` : null,
         z.people ? `from webcam: ${z.sources.vitals} · self-reported: ${z.sources.self_report}` : null,
-        z.devices ? `Room sensors: <b>${z.coughs}</b> coughs, <b>${z.sneezes}</b> sneezes, <b>${z.footTraffic}</b> passers-by (last ${data.sensorHours} h)` : null,
+        z.devices ? `Heard by mic: <b>${z.coughs}</b> coughs, <b>${z.sneezes}</b> sneezes (last ${data.sensorHours} h)` : null,
         `<span class="muted">Signals — people ${pct(z.signals.people)}, severity ${pct(z.signals.severity)}, acoustic ${pct(z.signals.acoustic)}</span>`,
         `<span class="muted">Last activity: ${when(z.lastSeen)}</span>`,
       ].filter(Boolean);
@@ -246,8 +268,8 @@
     const pin = L.divIcon({ className: '', html: '<div class="sensor-pin"></div>', iconSize: [14, 14], iconAnchor: [7, 7] });
     data.devices.forEach(d => {
       L.marker([d.lat, d.lng], { icon: pin }).bindPopup(
-        `<b>Room sensor ${esc(d.deviceId)}</b><br>` +
-        `Last ${data.sensorHours} h: ${d.coughs} coughs, ${d.sneezes} sneezes, ${d.footTraffic} passers-by<br>` +
+        `<b>Mic listener ${esc(d.deviceId)}</b><br>` +
+        `Last ${data.sensorHours} h: ${d.coughs} coughs, ${d.sneezes} sneezes<br>` +
         `<span class="muted">Last report: ${when(d.lastSeen)}</span>`
       ).addTo(sensorLayer);
     });
@@ -317,6 +339,7 @@
           break;
         case 'metrics':
           onMetrics(msg);
+          if (msg.face?.talking?.detected) mic.talkingUntil = performance.now() + 1500;
           break;
         case 'zones-updated':
           scheduleReload();
@@ -331,7 +354,7 @@
   function setVitalsMode(on) {
     $('vitals-cards').style.display = on ? 'flex' : 'none';
     const badge = $('mode-badge');
-    badge.textContent = on ? 'Webcam vitals live' : 'Self-report + room sensors';
+    badge.textContent = on ? 'Webcam vitals live' : 'Self-report + mic';
     badge.classList.toggle('live', on);
   }
 
@@ -467,6 +490,167 @@
         symptoms:          true,
       });
       showResult($('report-result'), result, { lowText: 'Fake person not flagged', highText: 'Fake sick person added' });
+    });
+  });
+
+  // ── Laptop mic: cough & sneeze listener ───────────────────────────────────
+  // Rough on-device detector: a cough/sneeze is a short, loud, isolated burst.
+  // Speech is filtered by (a) requiring a moment of quiet before the burst and
+  // (b) ignoring bursts while the webcam SDK reports the person is talking.
+  const MIC = {
+    ONSET_DB:      12,    // jump above the noise floor that starts a sound event
+    MIN_PEAK_DB:   18,    // event must peak this far above the floor
+    MIN_DUR:       0.10,  // seconds
+    MAX_DUR:       1.0,
+    PRE_QUIET_MS:  400,   // quiet needed before a burst (speech is continuous)
+    SEND_EVERY_MS: 30_000,
+  };
+  const mic = {
+    on: false, stream: null, ctx: null, timer: null, sendTimer: null,
+    coughs: 0, sneezes: 0, pendingCoughs: 0, pendingSneezes: 0,
+    windowStart: Date.now(), talkingUntil: 0,
+  };
+  const deviceId = 'laptop-' + userId.slice(0, 8);
+
+  function micLog(text) { $('mic-log').textContent = text; }
+  function micRender() {
+    $('mic-coughs').textContent  = mic.coughs;
+    $('mic-sneezes').textContent = mic.sneezes;
+    $('mic-pending').textContent = mic.pendingCoughs + mic.pendingSneezes;
+  }
+  function micCount(kind, n = 1) {
+    if (kind === 'cough') { mic.coughs += n; mic.pendingCoughs += n; }
+    else                  { mic.sneezes += n; mic.pendingSneezes += n; }
+    micRender();
+  }
+
+  async function micSend() {
+    if (!userLocation) { micLog('Waiting for location before sending counts…'); return; }
+    const coughs = mic.pendingCoughs, sneezes = mic.pendingSneezes;
+    const now = Date.now();
+    const windowSec = Math.min(3600, Math.max(1, (now - mic.windowStart) / 1000));
+    mic.pendingCoughs = mic.pendingSneezes = 0;
+    micRender();
+    try {
+      const r = await postJson('/sensor-events', {
+        deviceId, lat: userLocation.lat, lng: userLocation.lng,
+        windowSec: Math.round(windowSec * 10) / 10, coughs, sneezes, footTraffic: 0,
+      });
+      if (r.error) throw new Error(r.error);
+      mic.windowStart = now;
+    } catch (e) {
+      mic.pendingCoughs += coughs; mic.pendingSneezes += sneezes; // retry next time
+      micRender();
+      micLog('Could not send counts (' + e.message + ') — will retry.');
+    }
+  }
+
+  async function startMic() {
+    try {
+      mic.stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      });
+    } catch {
+      micLog('Microphone permission denied. Allow it in the browser and try again.');
+      return;
+    }
+    mic.ctx = new AudioContext();
+    const analyser = mic.ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0;
+    mic.ctx.createMediaStreamSource(mic.stream).connect(analyser);
+
+    const wave = new Float32Array(analyser.fftSize);
+    const spec = new Float32Array(analyser.frequencyBinCount);
+    const binHz = mic.ctx.sampleRate / analyser.fftSize;
+    const centroid = () => {
+      analyser.getFloatFrequencyData(spec);
+      let num = 0, den = 0;
+      for (let i = 1; i < spec.length; i++) {
+        const m = Math.pow(10, spec[i] / 20);
+        num += m * i * binHz; den += m;
+      }
+      return den ? num / den : 0;
+    };
+
+    const startedAt = performance.now();
+    let noise = -50, inEvent = false, evStart = 0, peak = -120, peakCentroid = 0,
+        quietFrames = 0, lastLoud = 0, preQuiet = 0;
+
+    mic.timer = setInterval(() => {
+      analyser.getFloatTimeDomainData(wave);
+      let sum = 0;
+      for (let i = 0; i < wave.length; i++) sum += wave[i] * wave[i];
+      const db  = 10 * Math.log10(sum / wave.length + 1e-12);
+      const now = performance.now();
+
+      const over = db - noise;
+      $('mic-level').style.width = Math.max(0, Math.min(100, over * 3)) + '%';
+      $('mic-level').classList.toggle('hot', over > MIC.ONSET_DB);
+
+      if (now - startedAt < 1500) {            // calibrate to the room first
+        noise = 0.8 * noise + 0.2 * db;
+        return;
+      }
+      if (!inEvent) {
+        if (over > MIC.ONSET_DB) {
+          inEvent = true; evStart = now; peak = db; peakCentroid = centroid();
+          quietFrames = 0; preQuiet = now - lastLoud;
+        } else {
+          noise = 0.98 * noise + 0.02 * db;       // slowly follow the room
+          if (over > MIC.ONSET_DB / 2) lastLoud = now;
+        }
+        return;
+      }
+
+      if (db > peak) { peak = db; peakCentroid = centroid(); }
+      quietFrames = db < noise + MIC.ONSET_DB / 2 ? quietFrames + 1 : 0;
+      const dur = (now - evStart) / 1000;
+      if (quietFrames < 5 && dur < 2.5) return;  // event still going
+
+      inEvent = false;
+      lastLoud = now;
+      const soundDur = dur - quietFrames * 0.03;
+      const verdict =
+        now < mic.talkingUntil                      ? 'talking' :
+        preQuiet < MIC.PRE_QUIET_MS                 ? 'part of speech/noise' :
+        peak - noise < MIC.MIN_PEAK_DB              ? 'too quiet' :
+        soundDur < MIC.MIN_DUR || soundDur > MIC.MAX_DUR ? 'wrong length' :
+        peakCentroid < 400                          ? 'low thud' :
+        (peakCentroid > 2500 && soundDur >= 0.3)    ? 'sneeze' : 'cough';
+
+      if (verdict === 'cough' || verdict === 'sneeze') {
+        micCount(verdict);
+        micLog(`Heard a ${verdict} (${soundDur.toFixed(2)} s, +${(peak - noise).toFixed(0)} dB)`);
+      }
+    }, 30);
+
+    mic.windowStart = Date.now();
+    mic.sendTimer = setInterval(micSend, MIC.SEND_EVERY_MS);
+    mic.on = true;
+    $('mic-btn').textContent = '⏹ Stop listening';
+    micLog('Listening… calibrating to the room for a second.');
+  }
+
+  async function stopMic() {
+    clearInterval(mic.timer); clearInterval(mic.sendTimer);
+    mic.stream?.getTracks().forEach(t => t.stop());
+    await mic.ctx?.close();
+    mic.on = false;
+    $('mic-btn').textContent = '🎙️ Start listening';
+    $('mic-level').style.width = '0';
+    if (mic.pendingCoughs + mic.pendingSneezes) await micSend();
+    micLog('Stopped.');
+  }
+
+  $('mic-btn').addEventListener('click', () => (mic.on ? stopMic() : startMic()));
+
+  $('fake-cough-btn').addEventListener('click', () => {
+    if (needLocation()) return;
+    withBusy($('fake-cough-btn'), 'Sending…', async () => {
+      micCount('cough', 3);
+      await micSend();
+      micLog('Sent 3 pretend coughs.');
     });
   });
 </script>
