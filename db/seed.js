@@ -49,24 +49,32 @@ for (const [h, spot] of hotspots.entries()) {
   }
 }
 
-// Two mic listeners: a busy coughing cafeteria and a quiet library
+// Three mic listeners — one of each colour on the map right now:
+// a coughing cafeteria (red), a lecture hall (yellow) and a quiet library (green)
 const devices = [
-  { id: 'seed-cafeteria-mic', dLat:  0.001, dLng:  0.001, traffic: 60, coughRate: 0.12 },
-  { id: 'seed-library-mic',      dLat: -0.010, dLng:  0.005, traffic: 25, coughRate: 0.03 },
+  { id: 'seed-cafeteria-mic',    dLat:  0.001, dLng:  0.001, hourly: 14, recent: [8, 3] },
+  { id: 'seed-lecture-hall-mic', dLat:  0.005, dLng: -0.009, hourly: 6,  recent: [4, 1] },
+  { id: 'seed-library-mic',      dLat: -0.010, dLng:  0.005, hourly: 1,  recent: [1, 0] },
 ];
 let m = 0;
 for (const d of devices) {
-  for (let hr = 23; hr >= 0; hr--) {
-    const footTraffic = Math.round(d.traffic * (0.5 + rand()));
-    const events      = Math.round(footTraffic * d.coughRate * (0.5 + rand()));
-    const sneezes     = Math.round(events * 0.3);
+  const lat = baseLat + d.dLat, lng = baseLng + d.dLng;
+  // Past day, one batch per hour (older than the 30-minute "recent" window)
+  for (let hr = 23; hr >= 1; hr--) {
+    const events  = Math.round(d.hourly * (0.5 + rand()));
+    const sneezes = Math.round(events * 0.25);
     await store.insertSensorEvent({
       time: Date.now() - hr * 3600_000,
-      deviceId: d.id, lat: baseLat + d.dLat, lng: baseLng + d.dLng,
-      windowSec: 3600, coughs: events - sneezes, sneezes, footTraffic,
+      deviceId: d.id, lat, lng, windowSec: 3600, coughs: events - sneezes, sneezes, footTraffic: 0,
     });
     m++;
   }
+  // The last few minutes — this sets the dot colour
+  await store.insertSensorEvent({
+    time: Date.now() - 5 * 60_000,
+    deviceId: d.id, lat, lng, windowSec: 1500, coughs: d.recent[0], sneezes: d.recent[1], footTraffic: 0,
+  });
+  m++;
 }
 
 await store.flush();

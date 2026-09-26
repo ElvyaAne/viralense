@@ -84,3 +84,13 @@ test('zones are sorted riskiest first and carry bounds for drawing', () => {
   const [[s, w], [n, e]] = zones[0].bounds;
   assert.ok(s < zones[0].lat && zones[0].lat < n && w < zones[0].lng && zones[0].lng < e);
 });
+
+test('mic dot colour follows recent coughs + sneezes', async () => {
+  const { micLevel } = await import('./zones.js');
+  assert.equal(micLevel(0), 'green');
+  assert.equal(micLevel(2), 'green');
+  assert.equal(micLevel(3), 'yellow');
+  assert.equal(micLevel(7), 'yellow');
+  assert.equal(micLevel(8), 'red');
+  assert.equal(micLevel(5, { YELLOW_AT: 10, RED_AT: 20 }), 'green');
+});
