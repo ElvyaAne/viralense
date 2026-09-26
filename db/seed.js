@@ -39,15 +39,11 @@ for (const [h, spot] of hotspots.entries()) {
   for (let p = 0; p < spot.people; p++) {
     const lat    = +(baseLat + spot.dLat + (rand() - 0.5) * 0.002).toFixed(3);
     const lng    = +(baseLng + spot.dLng + (rand() - 0.5) * 0.002).toFixed(3);
-    const score  = 4 + Math.floor(rand() * 4 * spot.sick);
-    const source = rand() < 0.5 ? 'vitals' : 'self_report';
+    const score  = 3 + Math.floor(rand() * 5 * spot.sick);
     const hoursAgo = Math.floor(rand() * 72);
     await store.insertRiskEvent({
       time: Date.now() - hoursAgo * 3600_000,
-      userHash: `seed-${h}-${p}`, lat, lng, score, source,
-      pulseRate:     source === 'vitals' ? 95 + rand() * 20 : null,
-      breathingRate: source === 'vitals' ? 20 + rand() * 6  : null,
-      hrvMs: null,
+      userHash: `seed-${h}-${p}`, lat, lng, score, source: 'self_report',
     });
     n++;
   }
@@ -74,4 +70,4 @@ for (const d of devices) {
 }
 
 await store.flush();
-console.log(`Seeded ${n} risk events and ${m} sensor batches around ${centerLat}, ${centerLng}.`);
+console.log(`Seeded ${n} symptom reports and ${m} mic batches around ${centerLat}, ${centerLng}.`);

@@ -11,49 +11,46 @@
 
     header { padding: 0.85rem 1.25rem; background: #1a1d2e; border-bottom: 1px solid #2d3148; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
     header h1 { font-size: 1.3rem; font-weight: 700; color: #7c8aff; letter-spacing: -0.01em; }
-    #status-bar { font-size: 0.8rem; color: #888; }
-    #validation-hint { font-size: 0.8rem; color: #ffd700; margin-left: auto; }
-    .badge { font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 999px; border: 1px solid #2d3148; color: #a0a8d0; }
-    .badge.live { border-color: #166534; color: #6ee7a0; }
+    header .tag { font-size: 0.8rem; color: #7a7f99; }
+    #conn { margin-left: auto; font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; border: 1px solid #2d3148; color: #7a7f99; }
+    #conn.live { border-color: #166534; color: #6ee7a0; }
 
     main { flex: 1; display: flex; gap: 1rem; padding: 1rem; overflow: hidden; }
-
-    #left { width: 370px; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.75rem; overflow-y: auto; }
+    #left  { width: 370px; flex-shrink: 0; display: flex; flex-direction: column; gap: 0.75rem; overflow-y: auto; }
     #right { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; }
 
     .card { background: #1a1d2e; border: 1px solid #2d3148; border-radius: 8px; padding: 0.9rem; }
     .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: #7a7f99; margin-bottom: 0.6rem; }
     .muted { font-size: 0.78rem; color: #7a7f99; line-height: 1.45; }
 
-    #feed-img { width: 100%; border-radius: 5px; background: #0a0b12; display: block; min-height: 180px; object-fit: cover; }
-    #cam-hint { font-size: 0.75rem; color: #ffd700; margin-top: 0.35rem; min-height: 1.1em; }
-
-    .metric-row { display: flex; justify-content: space-between; align-items: center; padding: 0.3rem 0; border-bottom: 1px solid #23263b; font-size: 0.88rem; }
-    .metric-row:last-child { border-bottom: none; }
-    .metric-val { font-weight: 600; font-variant-numeric: tabular-nums; color: #a0d4ff; }
-
-    #progress-label { font-size: 0.78rem; color: #888; margin-bottom: 0.4rem; }
-    #progress-bar { width: 100%; height: 5px; appearance: none; border-radius: 3px; }
-    #progress-bar::-webkit-progress-bar   { background: #2d3148; border-radius: 3px; }
-    #progress-bar::-webkit-progress-value { background: #7c8aff; border-radius: 3px; }
-    #progress-bar::-moz-progress-bar      { background: #7c8aff; border-radius: 3px; }
-
-    #form-card { display: none; }
-    .form-section { display: flex; flex-direction: column; gap: 0.55rem; }
-    .form-section label, .symptom-grid label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer; user-select: none; }
-    input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: #7c8aff; flex-shrink: 0; }
-    .symptom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem 0.6rem; margin-bottom: 0.6rem; }
-    .symptom-grid label { font-size: 0.82rem; }
-
     .btn { padding: 0.55rem 1rem; background: #7c8aff; color: #fff; border: none; border-radius: 6px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: background 0.15s; width: 100%; }
     .btn:hover:not(:disabled) { background: #6470e8; }
     .btn:disabled { background: #2d3148; color: #555; cursor: not-allowed; }
+    .btn-ghost { background: transparent; border: 1px solid #2d3148; color: #a0a8d0; font-weight: 500; }
+    .btn-ghost:hover:not(:disabled) { background: #23263b; }
     .btn-demo { margin-top: 0.4rem; background: #7a3a00; color: #ffb347; border: 1px dashed #ff8c00; font-size: 0.8rem; }
     .btn-demo:hover:not(:disabled) { background: #9a4a00; }
+
+    input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; accent-color: #7c8aff; flex-shrink: 0; }
+    .symptom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem 0.6rem; margin-bottom: 0.6rem; }
+    .symptom-grid label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; cursor: pointer; user-select: none; }
 
     .result { display: none; margin-top: 0.6rem; padding: 0.7rem 0.85rem; border-radius: 6px; font-size: 0.85rem; line-height: 1.5; }
     .result-high { background: #2b0d16; border: 1px solid #7f1d30; color: #f87171; }
     .result-low  { background: #0c2216; border: 1px solid #166534; color: #6ee7a0; }
+
+    .counts { display: flex; gap: 1.25rem; margin: 0.6rem 0; }
+    .counts .v { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #e0e4ff; }
+    .counts .l { font-size: 0.72rem; color: #7a7f99; }
+    #mic-meter { height: 6px; background: #2d3148; border-radius: 3px; overflow: hidden; margin-bottom: 0.5rem; }
+    #mic-level { height: 100%; width: 0; background: #6ee7a0; transition: width 60ms linear; }
+    #mic-level.hot { background: #f87171; }
+    .status-line { font-size: 0.75rem; color: #a0a8d0; min-height: 1.1em; margin-top: 0.45rem; line-height: 1.4; }
+    .status-line.ok  { color: #6ee7a0; }
+    .status-line.err { color: #f87171; }
+
+    #loc-text { font-size: 0.85rem; margin-bottom: 0.5rem; }
+    #loc-text b { color: #e0e4ff; }
 
     #stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
     .stat { background: #1a1d2e; border: 1px solid #2d3148; border-radius: 8px; padding: 0.7rem 0.9rem; }
@@ -64,121 +61,57 @@
     .map-head .section-title { margin: 0; }
     .toggles { display: flex; gap: 0.9rem; font-size: 0.78rem; color: #a0a8d0; }
     .toggles label { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; }
-
     #map { flex: 1; border-radius: 6px; min-height: 420px; }
+    #map.picking { cursor: crosshair; outline: 2px solid #7c8aff; }
     .map-legend { display: flex; gap: 1rem; font-size: 0.75rem; color: #888; flex-wrap: wrap; margin-top: 0.5rem; }
     .ldot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+    #empty-note { display: none; font-size: 0.8rem; color: #a0a8d0; margin-top: 0.4rem; }
 
     .leaflet-popup-content { font-size: 0.82rem; line-height: 1.5; }
     .pop-level { font-weight: 700; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.05em; }
-    .sensor-pin { background: #7c8aff; border: 2px solid #fff; border-radius: 50%; width: 14px; height: 14px; box-shadow: 0 0 0 3px rgba(124,138,255,0.35); }
-
-    .mic-counts { display: flex; gap: 1.25rem; margin: 0.6rem 0; }
-    .mic-counts .v { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #e0e4ff; }
-    .mic-counts .l { font-size: 0.72rem; color: #7a7f99; }
-    #mic-meter { height: 6px; background: #2d3148; border-radius: 3px; overflow: hidden; margin-bottom: 0.4rem; }
-    #mic-level { height: 100%; width: 0; background: #6ee7a0; transition: width 60ms linear; }
-    #mic-level.hot { background: #f87171; }
-    #mic-log { font-size: 0.75rem; color: #a0a8d0; min-height: 1.1em; margin-top: 0.45rem; }
+    .mic-pin { background: #7c8aff; border: 2px solid #fff; border-radius: 50%; width: 14px; height: 14px; box-shadow: 0 0 0 3px rgba(124,138,255,0.35); }
 
     @media (max-width: 900px) {
       main { flex-direction: column; overflow: visible; }
       #left { width: 100%; overflow: visible; }
       #stats { grid-template-columns: repeat(2, 1fr); }
-      #validation-hint { margin-left: 0; }
     }
-    #scan-wrap { position: relative; border-radius: 6px; overflow: hidden; background: #0a0b12; aspect-ratio: 4 / 3; }
-    #scan-canvas { width: 100%; height: 100%; display: block; transform: scaleX(-1); }
-    #scan-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 1rem; font-size: 0.8rem; color: #7a7f99; }
-    #scan-live { display: flex; gap: 1.25rem; margin: 0.6rem 0 0.4rem; }
-    #scan-live .v { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #a0d4ff; }
-    #scan-live .l { font-size: 0.72rem; color: #7a7f99; }
-    #scan-hint { font-size: 0.78rem; color: #ffd700; min-height: 1.1em; margin: 0.3rem 0; }
-    #scan-form { display: none; flex-direction: column; gap: 0.55rem; margin-top: 0.4rem; }
   </style>
 </head>
 <body>
 
 <header>
   <h1>Viralense</h1>
-  <span id="mode-badge" class="badge">Connecting…</span>
-  <span id="status-bar"></span>
-  <span id="validation-hint"></span>
+  <span class="tag">Live sickness-risk map from coughs, sneezes and symptoms</span>
+  <span id="conn">Connecting…</span>
 </header>
 
 <main>
-  <!-- Left panel: camera + metrics + forms -->
   <div id="left">
 
-    <div id="scan-card" class="card">
-      <div class="section-title">Face scan (webcam)</div>
-      <div id="scan-wrap">
-        <canvas id="scan-canvas" width="320" height="240"></canvas>
-        <div id="scan-empty">Your camera stays on this page — nothing is recorded or uploaded, only the final numbers.</div>
-      </div>
-      <div id="scan-live">
-        <div><div class="v"><span id="scan-bpm">--</span></div><div class="l">Pulse (bpm)</div></div>
-        <div><div class="v"><span id="scan-rpm">--</span></div><div class="l">Breathing (/min)</div></div>
-        <div><div class="v"><span id="scan-q">--</span></div><div class="l">Signal quality</div></div>
-      </div>
-      <progress id="scan-progress" max="30" value="0" style="width:100%;height:5px"></progress>
-      <div id="scan-hint"></div>
-      <button id="scan-btn" class="btn">📷 Start 30-second face scan</button>
-      <div id="scan-form" class="form-section">
-        <label><input type="checkbox" id="scan-exercised"> Exercised in the last 30 minutes?</label>
-        <label><input type="checkbox" id="scan-symptoms"> Cough, fever or sore throat?</label>
-        <button id="scan-submit" class="btn">Submit reading</button>
-      </div>
-      <div id="scan-result" class="result"></div>
-    </div>
-
-    <div id="vitals-cards" style="display:none; flex-direction:column; gap:0.75rem;">
-      <div class="card" style="padding:0.5rem">
-        <img id="feed-img" alt="Camera feed"
-             src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"/>
-        <div id="cam-hint"></div>
-      </div>
-
-      <div class="card">
-        <div class="section-title">Live Vitals</div>
-        <div class="metric-row"><span>Pulse</span>       <span class="metric-val"><span id="m-pulse">--</span> bpm</span></div>
-        <div class="metric-row"><span>Breathing</span>   <span class="metric-val"><span id="m-breath">--</span> rpm</span></div>
-        <div class="metric-row"><span>HRV (RMSSD)</span> <span class="metric-val"><span id="m-hrv">--</span> ms</span></div>
-        <div class="metric-row"><span>Confidence</span>  <span class="metric-val"><span id="m-conf">--</span></span></div>
-      </div>
-
-      <div class="card">
-        <div id="progress-label">Waiting for a face in frame…</div>
-        <progress id="progress-bar" max="30" value="0"></progress>
-      </div>
-
-      <div id="form-card" class="card">
-        <div class="section-title">Before you submit</div>
-        <div class="form-section">
-          <label><input type="checkbox" id="exercised"> Exercised in the last 30 minutes?</label>
-          <label><input type="checkbox" id="symptoms"> Cough, fever or sore throat?</label>
-          <button id="submit-btn" class="btn">Submit Reading</button>
-        </div>
-        <div id="vitals-result" class="result"></div>
-      </div>
+    <div class="card">
+      <div class="section-title">Your location</div>
+      <div id="loc-text">Finding your location…</div>
+      <button id="loc-btn" class="btn btn-ghost">📍 Pick my location on the map</button>
     </div>
 
     <div class="card">
       <div class="section-title">Cough &amp; sneeze listener</div>
-      <p class="muted">Uses your computer's microphone. Sound is analysed live in this tab and never recorded or uploaded, only the counts. Coughs are ignored while the webcam sees you talking.</p>
-      <div class="mic-counts">
+      <p class="muted">Uses your computer's microphone. Sound is analysed live in this tab and never recorded or uploaded, only the counts.</p>
+      <div class="counts">
         <div><div class="v" id="mic-coughs">0</div><div class="l">Coughs</div></div>
         <div><div class="v" id="mic-sneezes">0</div><div class="l">Sneezes</div></div>
-        <div><div class="v" id="mic-pending">0</div><div class="l">Not sent yet</div></div>
+        <div><div class="v" id="mic-pending">0</div><div class="l">Waiting to send</div></div>
       </div>
       <div id="mic-meter"><div id="mic-level"></div></div>
       <button id="mic-btn" class="btn">🎙️ Start listening</button>
-      <div id="mic-log"></div>
+      <div id="mic-log" class="status-line"></div>
+      <div id="mic-sent" class="status-line"></div>
     </div>
 
     <div class="card">
       <div class="section-title">How are you feeling?</div>
-      <p class="muted" style="margin-bottom:0.7rem">No camera needed. Tick anything you have right now. Only an anonymous, ~100&nbsp;m-rounded location is stored, and only if you have symptoms.</p>
+      <p class="muted" style="margin-bottom:0.7rem">Tick anything you have right now. Only an anonymous, ~100&nbsp;m-rounded location is stored, and only if you have symptoms.</p>
       <div id="symptom-grid" class="symptom-grid"></div>
       <button id="report-btn" class="btn">Report symptoms</button>
       <div id="report-result" class="result"></div>
@@ -186,37 +119,38 @@
 
     <div class="card">
       <div class="section-title">Demo tools</div>
-      <p class="muted" style="margin-bottom:0.3rem">Adds a made-up sick person near you so you can watch the map react.</p>
-      <button id="fake-sick-btn" class="btn btn-demo">🧪 Add fake sick person nearby</button>
+      <p class="muted">For showing how the map reacts.</p>
+      <button id="fake-sick-btn" class="btn btn-demo">🧪 Add a fake sick person nearby</button>
       <button id="fake-cough-btn" class="btn btn-demo">🤧 Pretend the mic heard 3 coughs</button>
+      <div id="demo-result" class="result"></div>
     </div>
 
   </div>
 
-  <!-- Right panel: stats + map -->
   <div id="right">
     <div id="stats">
       <div class="stat"><div class="v" id="s-zones">–</div><div class="l">Active zones</div></div>
       <div class="stat"><div class="v" id="s-high">–</div><div class="l">High-risk zones</div></div>
-      <div class="stat"><div class="v" id="s-people">–</div><div class="l">People flagged</div></div>
-      <div class="stat"><div class="v" id="s-acoustic">–</div><div class="l">Coughs + sneezes heard</div></div>
+      <div class="stat"><div class="v" id="s-acoustic">–</div><div class="l" id="s-acoustic-l">Coughs + sneezes heard</div></div>
+      <div class="stat"><div class="v" id="s-people">–</div><div class="l" id="s-people-l">People with symptoms</div></div>
     </div>
 
     <div class="card" style="flex:1;display:flex;flex-direction:column;">
       <div class="map-head">
-        <div class="section-title" id="map-title">Sickness risk by zone</div>
+        <div class="section-title">Sickness risk by zone (~500 m)</div>
         <div class="toggles">
           <label><input type="checkbox" id="t-heat" checked> Heatmap</label>
           <label><input type="checkbox" id="t-zones" checked> Zones</label>
-          <label><input type="checkbox" id="t-sensors" checked> Mics</label>
+          <label><input type="checkbox" id="t-mics" checked> Mics</label>
         </div>
       </div>
       <div id="map"></div>
+      <div id="empty-note">No data yet — start the listener, report symptoms, or use the demo buttons.</div>
       <div class="map-legend">
         <span><span class="ldot" style="background:#ffd700"></span>Low (index &lt; 30)</span>
         <span><span class="ldot" style="background:#ff8c00"></span>Elevated (30–59)</span>
         <span><span class="ldot" style="background:#dc143c"></span>High (60+)</span>
-        <span><span class="ldot" style="background:#7c8aff;border-radius:50%"></span>Laptop mic listener</span>
+        <span><span class="ldot" style="background:#7c8aff;border-radius:50%"></span>Mic listener</span>
       </div>
     </div>
   </div>
@@ -224,12 +158,12 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-<script src="vitals.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  const clock = (d) => new Date(d).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
 
-  // ── User identity (persisted in localStorage) ─────────────────────────────
+  // ── Anonymous browser id ──────────────────────────────────────────────────
   let userId = null;
   try { userId = localStorage.getItem('viralense_uid'); } catch {}
   if (!userId) {
@@ -237,317 +171,171 @@
     try { localStorage.setItem('viralense_uid', userId); } catch {}
   }
 
-  // ── State ─────────────────────────────────────────────────────────────────
-  let measureStart  = null;
-  let elapsedSec    = 0;
-  let userLocation  = null;
-  const lm = { pulseRate: null, breathingRate: null, hrvMs: null,
-               pulseConf: null, breathConf: null, confidence: null };
-
-  // ── Leaflet map ───────────────────────────────────────────────────────────
-  const map = L.map('map').setView([45.4231, -75.6831], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map);
-
-  const heatLayer   = L.heatLayer([], { radius: 45, blur: 30, maxZoom: 16, minOpacity: 0.25,
-                                        gradient: { 0.2: '#ffd700', 0.5: '#ff8c00', 0.8: '#dc143c' } }).addTo(map);
-  const zoneLayer   = L.layerGroup().addTo(map);
-  const sensorLayer = L.layerGroup().addTo(map);
-
-  const toggle = (id, layer) => $(id).addEventListener('change', e =>
-    e.target.checked ? layer.addTo(map) : map.removeLayer(layer));
-  toggle('t-heat', heatLayer);
-  toggle('t-zones', zoneLayer);
-  toggle('t-sensors', sensorLayer);
-
-  const LEVEL_COLOR = { high: '#dc143c', elevated: '#ff8c00', low: '#ffd700', none: '#666' };
-  const pct = (x) => Math.round(x * 100) + '%';
-  const when = (t) => t ? new Date(t).toLocaleString() : '—';
-
-  let fittedOnce = false;
-
-  async function loadZones() {
-    let data;
-    try {
-      const res = await fetch('/zones');
-      data = await res.json();
-      if (data.error) throw new Error(data.error);
-    } catch { return; }
-
-    zoneLayer.clearLayers();
-    sensorLayer.clearLayers();
-
-    heatLayer.setLatLngs(data.zones.map(z => [z.lat, z.lng, Math.max(0.15, z.index / 100)]));
-
-    data.zones.forEach(z => {
-      const color = LEVEL_COLOR[z.level];
-      const lines = [
-        `<span class="pop-level" style="color:${color}">${z.level} risk</span> · index <b>${z.index}</b>/100`,
-        z.people ? `<b>${z.people}</b> ${z.people === 1 ? 'person' : 'people'} flagged (avg score ${z.avgScore})` : null,
-        z.people ? `from webcam: ${z.sources.vitals} · self-reported: ${z.sources.self_report}` : null,
-        z.devices ? `Heard by mic: <b>${z.coughs}</b> coughs, <b>${z.sneezes}</b> sneezes (last ${data.sensorHours} h)` : null,
-        `<span class="muted">Signals — people ${pct(z.signals.people)}, severity ${pct(z.signals.severity)}, acoustic ${pct(z.signals.acoustic)}</span>`,
-        `<span class="muted">Last activity: ${when(z.lastSeen)}</span>`,
-      ].filter(Boolean);
-      L.rectangle(z.bounds, {
-        color, weight: 1, fillColor: color,
-        fillOpacity: 0.12 + 0.35 * (z.index / 100),
-      }).bindPopup(lines.join('<br>')).addTo(zoneLayer);
-    });
-
-    const pin = L.divIcon({ className: '', html: '<div class="sensor-pin"></div>', iconSize: [14, 14], iconAnchor: [7, 7] });
-    data.devices.forEach(d => {
-      L.marker([d.lat, d.lng], { icon: pin }).bindPopup(
-        `<b>Mic listener ${esc(d.deviceId)}</b><br>` +
-        `Last ${data.sensorHours} h: ${d.coughs} coughs, ${d.sneezes} sneezes<br>` +
-        `<span class="muted">Last report: ${when(d.lastSeen)}</span>`
-      ).addTo(sensorLayer);
-    });
-
-    $('s-zones').textContent    = data.zones.length;
-    $('s-high').textContent     = data.zones.filter(z => z.level === 'high').length;
-    $('s-people').textContent   = data.zones.reduce((a, z) => a + z.people, 0);
-    $('s-acoustic').textContent = data.zones.reduce((a, z) => a + z.coughs + z.sneezes, 0);
-    $('map-title').textContent  =
-      `Sickness risk by zone — people: last ${data.vitalsDays} days` +
-      (data.minPeople > 1 ? ` (min. ${data.minPeople} per zone)` : '') +
-      `, sensors: last ${data.sensorHours} h`;
-
-    // First load with no location yet: frame whatever data exists
-    if (!fittedOnce && !userLocation && data.zones.length) {
-      fittedOnce = true;
-      map.fitBounds(L.latLngBounds(data.zones.flatMap(z => z.bounds)), { maxZoom: 15, padding: [20, 20] });
-    }
-  }
-
-  let reloadTimer = null;
-  const scheduleReload = () => { clearTimeout(reloadTimer); reloadTimer = setTimeout(loadZones, 500); };
-
-  loadZones();
-  setInterval(loadZones, 60_000);
-
-  // ── Geolocation ───────────────────────────────────────────────────────────
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        fittedOnce = true;
-        map.setView([userLocation.lat, userLocation.lng], 14);
-        L.circleMarker([userLocation.lat, userLocation.lng], { radius: 6, color: '#fff', weight: 2, fillColor: '#3b82f6', fillOpacity: 1 })
-          .bindTooltip('You').addTo(map);
-      },
-      () => {
-        $('cam-hint').textContent = 'Location permission denied — readings cannot be stored.';
-      }
-    );
-  }
-
-  function needLocation() {
-    if (userLocation) return false;
-    alert('Location permission is required so your report lands in the right zone.\nPlease allow location access and refresh the page.');
-    return true;
-  }
-
-  // ── WebSocket (live vitals + map updates) ─────────────────────────────────
-  function connectWs() {
-    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
-
-    ws.onmessage = ({ data }) => {
-      let msg;
-      try { msg = JSON.parse(data); } catch { return; }
-
-      switch (msg.type) {
-        case 'frame':
-          $('feed-img').src = 'data:image/jpeg;base64,' + msg.data;
-          break;
-        case 'status':
-          if (msg.vitals !== undefined) setVitalsMode(msg.vitals);
-          $('status-bar').textContent = msg.vitals === false ? '' : 'SDK: ' + msg.status;
-          break;
-        case 'validation':
-          $('validation-hint').textContent = msg.hint || '';
-          break;
-        case 'metrics':
-          onMetrics(msg);
-          if (msg.face?.talking?.detected) mic.talkingUntil = performance.now() + 1500;
-          break;
-        case 'zones-updated':
-          scheduleReload();
-          break;
-      }
-    };
-    ws.onclose = () => setTimeout(connectWs, 3000);
-  }
-  setVitalsMode(false);
-  connectWs();
-
-  function setVitalsMode(on) {
-    $('vitals-cards').style.display = on ? 'flex' : 'none';
-    $('scan-card').style.display    = on ? 'none' : 'block'; // server SDK has the camera
-    const badge = $('mode-badge');
-    badge.textContent = on ? 'Webcam vitals live (SDK)' : 'Browser webcam + mic';
-    badge.classList.toggle('live', on);
-  }
-
-  // ── Metrics update ────────────────────────────────────────────────────────
-  function onMetrics(msg) {
-    if (!measureStart) measureStart = Date.now();
-
-    const pr = msg.cardio?.pulseRate;
-    const br = msg.breathing?.rate;
-    const hv = msg.cardio?.hrv;
-
-    if (pr) { lm.pulseRate     = pr.value; lm.pulseConf  = pr.confidence; }
-    if (br) { lm.breathingRate = br.value; lm.breathConf = br.confidence; }
-    if (hv?.rmssd != null) lm.hrvMs = hv.rmssd;
-
-    // SDK confidence is 0-100; normalize to 0-1 for the scoring function
-    const confs = [lm.pulseConf, lm.breathConf].filter(v => v != null);
-    lm.confidence = confs.length ? Math.min(...confs) / 100 : null;
-
-    const fmt = (id, val, digits = 1) =>
-      ($(id).textContent = val != null ? val.toFixed(digits) : '--');
-    fmt('m-pulse',  lm.pulseRate);
-    fmt('m-breath', lm.breathingRate);
-    fmt('m-hrv',    lm.hrvMs);
-    $('m-conf').textContent = lm.confidence != null ? (lm.confidence * 100).toFixed(0) + '%' : '--';
-  }
-
-  // ── Progress ticker ───────────────────────────────────────────────────────
-  setInterval(() => {
-    if (!measureStart) return;
-    elapsedSec    = Math.floor((Date.now() - measureStart) / 1000);
-    const capped  = Math.min(elapsedSec, 30);
-    $('progress-bar').value = capped;
-    $('progress-label').textContent =
-      elapsedSec >= 30
-        ? 'Measurement complete (30+ s) — ready to submit'
-        : `Measuring… ${elapsedSec} / 30 s`;
-    if (elapsedSec >= 30) $('form-card').style.display = 'block';
-  }, 500);
-
-  // ── Shared result rendering ───────────────────────────────────────────────
-  function showResult(el, result, { lowText, highText }) {
-    el.style.display = 'block';
-    if (result.error) {
-      el.className   = 'result result-high';
-      el.textContent = 'Error: ' + result.error;
-      return;
-    }
-    const reasons = result.reasons?.length ? '<br>' + result.reasons.map(esc).join(' · ') : '';
-    const counted = result.stored === false && (result.highRisk || result.store)
-      ? '<br><em>Already counted in the last 12 h — map unchanged.</em>' : '';
-    el.className = 'result ' + (result.highRisk ? 'result-high' : 'result-low');
-    el.innerHTML = `<strong>${result.highRisk ? highText : lowText} (score ${result.score})</strong>${reasons}${counted}`;
-  }
-
   async function postJson(url, body) {
-    const res = await fetch(url, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-    });
-    return res.json();
+    const res  = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    if (!res.ok && !data.error) data.error = `HTTP ${res.status}`;
+    return data;
   }
 
   async function withBusy(btn, label, fn) {
     const original = btn.textContent;
     btn.disabled = true; btn.textContent = label;
     try { await fn(); }
-    catch (e) { alert('Submit failed: ' + e.message); }
+    catch (e) { alert('Something went wrong: ' + e.message); }
     finally { btn.disabled = false; btn.textContent = original; }
   }
 
-  // ── Webcam reading submit ─────────────────────────────────────────────────
-  $('submit-btn').addEventListener('click', () => {
-    if (needLocation()) return;
-    if (!lm.pulseRate || !lm.breathingRate) {
-      return alert('Waiting for valid metrics from the SDK. Please try again in a moment.');
-    }
-    withBusy($('submit-btn'), 'Submitting…', async () => {
-      const result = await postJson('/readings', {
-        userId,
-        lat:               userLocation.lat,
-        lng:               userLocation.lng,
-        pulseRate:         lm.pulseRate,
-        breathingRate:     lm.breathingRate,
-        hrvMs:             lm.hrvMs ?? undefined,
-        confidence:        lm.confidence ?? 0,
-        durationSec:       elapsedSec,
-        exercisedRecently: $('exercised').checked,
-        symptoms:          $('symptoms').checked,
-      });
-      showResult($('vitals-result'), result, { lowText: 'Normal reading', highText: 'High risk flagged' });
-      scheduleReload();
-    });
-  });
+  function showResult(el, cls, html) {
+    el.style.display = 'block';
+    el.className = 'result ' + cls;
+    el.innerHTML = html;
+  }
 
-  // ── Symptom self-report ───────────────────────────────────────────────────
-  (async () => {
+  // ── Map ───────────────────────────────────────────────────────────────────
+  const map = L.map('map').setView([45.4231, -75.6831], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }).addTo(map);
+
+  const heatLayer = L.heatLayer([], { radius: 45, blur: 30, maxZoom: 16, minOpacity: 0.25,
+                                      gradient: { 0.2: '#ffd700', 0.5: '#ff8c00', 0.8: '#dc143c' } }).addTo(map);
+  const zoneLayer = L.layerGroup().addTo(map);
+  const micLayer  = L.layerGroup().addTo(map);
+  const toggle = (id, layer) => $(id).addEventListener('change', e =>
+    e.target.checked ? layer.addTo(map) : map.removeLayer(layer));
+  toggle('t-heat', heatLayer);
+  toggle('t-zones', zoneLayer);
+  toggle('t-mics', micLayer);
+
+  const LEVEL_COLOR = { high: '#dc143c', elevated: '#ff8c00', low: '#ffd700', none: '#666' };
+
+  async function loadZones() {
+    let data;
     try {
-      const list = await (await fetch('/symptoms')).json();
-      $('symptom-grid').innerHTML = list.map(s =>
-        `<label><input type="checkbox" value="${esc(s.id)}"> ${esc(s.label)}</label>`).join('');
-    } catch {
-      $('symptom-grid').textContent = 'Could not load symptom list.';
+      data = await (await fetch('/zones')).json();
+      if (data.error) throw new Error(data.error);
+    } catch { return; }
+
+    zoneLayer.clearLayers();
+    micLayer.clearLayers();
+    heatLayer.setLatLngs(data.zones.map(z => [z.lat, z.lng, Math.max(0.15, z.index / 100)]));
+
+    data.zones.forEach(z => {
+      const color = LEVEL_COLOR[z.level];
+      const lines = [
+        `<span class="pop-level" style="color:${color}">${z.level} risk</span> · index <b>${z.index}</b>/100`,
+        z.people  ? `<b>${z.people}</b> ${z.people === 1 ? 'person' : 'people'} reported symptoms (avg score ${z.avgScore})` : null,
+        z.devices ? `Mics heard <b>${z.coughs}</b> coughs and <b>${z.sneezes}</b> sneezes (last ${data.sensorHours} h)` : null,
+        `<span class="muted">Last activity: ${z.lastSeen ? new Date(z.lastSeen).toLocaleString() : '—'}</span>`,
+      ].filter(Boolean);
+      L.rectangle(z.bounds, { color, weight: 1, fillColor: color, fillOpacity: 0.12 + 0.35 * (z.index / 100) })
+        .bindPopup(lines.join('<br>')).addTo(zoneLayer);
+    });
+
+    const pin = L.divIcon({ className: '', html: '<div class="mic-pin"></div>', iconSize: [14, 14], iconAnchor: [7, 7] });
+    data.devices.forEach(d => {
+      L.marker([d.lat, d.lng], { icon: pin }).bindPopup(
+        `<b>Mic listener</b> <span class="muted">${esc(d.deviceId)}</span><br>` +
+        `Last ${data.sensorHours} h: ${d.coughs} coughs, ${d.sneezes} sneezes<br>` +
+        `<span class="muted">Last report: ${new Date(d.lastSeen).toLocaleString()}</span>`
+      ).addTo(micLayer);
+    });
+
+    $('s-zones').textContent     = data.zones.length;
+    $('s-high').textContent      = data.zones.filter(z => z.level === 'high').length;
+    $('s-acoustic').textContent  = data.devices.reduce((a, d) => a + d.coughs + d.sneezes, 0);
+    $('s-acoustic-l').textContent = `Coughs + sneezes heard (${data.sensorHours} h)`;
+    $('s-people').textContent    = data.zones.reduce((a, z) => a + z.people, 0);
+    $('s-people-l').textContent  = `People with symptoms (${data.reportDays} days)`;
+    $('empty-note').style.display = data.zones.length ? 'none' : 'block';
+  }
+
+  let reloadTimer = null;
+  const scheduleReload = () => { clearTimeout(reloadTimer); reloadTimer = setTimeout(loadZones, 300); };
+  loadZones();
+  setInterval(loadZones, 30_000);
+
+  // ── Location: browser GPS, else the default spot, or picked on the map ────
+  let userLocation = null;
+  let youMarker = null;
+  let picking = false;
+
+  function setLocation(lat, lng, how) {
+    userLocation = { lat, lng };
+    const label = { gps: 'from your browser', default: 'default spot (your browser didn’t share one)', picked: 'picked on the map' }[how];
+    $('loc-text').innerHTML = `<b>${lat.toFixed(4)}, ${lng.toFixed(4)}</b><br><span class="muted">${label}</span>`;
+    if (!youMarker) {
+      youMarker = L.circleMarker([lat, lng], { radius: 7, color: '#fff', weight: 2, fillColor: '#3b82f6', fillOpacity: 1 })
+        .bindTooltip('You').addTo(map);
+    } else {
+      youMarker.setLatLng([lat, lng]);
     }
+    if (how !== 'picked') map.setView([lat, lng], 14);
+    micFlushSoon();
+  }
+
+  (async () => {
+    let cfg = { defaultLat: 45.4231, defaultLng: -75.6831 };
+    try { cfg = await (await fetch('/config')).json(); } catch {}
+    map.setView([cfg.defaultLat, cfg.defaultLng], 14);
+    const useDefault = () => { if (!userLocation) setLocation(cfg.defaultLat, cfg.defaultLng, 'default'); };
+    if (!navigator.geolocation) return useDefault();
+    const fallback = setTimeout(useDefault, 10_000); // some desktops never answer
+    navigator.geolocation.getCurrentPosition(
+      pos => { clearTimeout(fallback); setLocation(pos.coords.latitude, pos.coords.longitude, 'gps'); },
+      ()  => { clearTimeout(fallback); useDefault(); },
+      { timeout: 9000, maximumAge: 600_000 },
+    );
   })();
 
-  $('report-btn').addEventListener('click', () => {
-    if (needLocation()) return;
-    const symptoms = [...document.querySelectorAll('#symptom-grid input:checked')].map(i => i.value);
-    withBusy($('report-btn'), 'Sending…', async () => {
-      const result = await postJson('/symptom-reports', {
-        userId, lat: userLocation.lat, lng: userLocation.lng, symptoms,
-      });
-      const lowText = result.store ? 'Mild symptoms recorded' : 'Thanks — nothing to flag';
-      showResult($('report-result'), result, { lowText, highText: 'Symptoms flagged' });
-      scheduleReload();
-    });
+  $('loc-btn').addEventListener('click', () => {
+    picking = !picking;
+    $('map').classList.toggle('picking', picking);
+    $('loc-btn').textContent = picking ? 'Click anywhere on the map… (cancel)' : '📍 Pick my location on the map';
+  });
+  map.on('click', (e) => {
+    if (!picking) return;
+    picking = false;
+    $('map').classList.remove('picking');
+    $('loc-btn').textContent = '📍 Pick my location on the map';
+    setLocation(e.latlng.lat, e.latlng.lng, 'picked');
   });
 
-  // ── Demo: fake sick person nearby ─────────────────────────────────────────
-  // Uses a fresh anonymous id each time so every click adds a new person.
-  $('fake-sick-btn').addEventListener('click', () => {
-    if (needLocation()) return;
-    withBusy($('fake-sick-btn'), 'Adding…', async () => {
-      const jitter = () => (Math.random() - 0.5) * 0.004; // within a couple of blocks
-      const result = await postJson('/readings', {
-        userId:            'demo-' + crypto.randomUUID(),
-        lat:               userLocation.lat + jitter(),
-        lng:               userLocation.lng + jitter(),
-        pulseRate:         105 + Math.random() * 10,
-        breathingRate:     25 + Math.random() * 3,
-        hrvMs:             15,
-        confidence:        0.95,
-        durationSec:       45,
-        exercisedRecently: false,
-        symptoms:          true,
-      });
-      showResult($('report-result'), result, { lowText: 'Fake person not flagged', highText: 'Fake sick person added' });
-      scheduleReload();
-    });
-  });
+  // ── Live updates ──────────────────────────────────────────────────────────
+  function connectWs() {
+    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`);
+    ws.onopen    = () => { $('conn').textContent = 'Live'; $('conn').classList.add('live'); };
+    ws.onmessage = ({ data }) => {
+      try { if (JSON.parse(data).type === 'zones-updated') scheduleReload(); } catch {}
+    };
+    ws.onclose = () => {
+      $('conn').textContent = 'Reconnecting…'; $('conn').classList.remove('live');
+      setTimeout(connectWs, 3000);
+    };
+  }
+  connectWs();
 
-  // ── Laptop mic: cough & sneeze listener ───────────────────────────────────
-  // Rough on-device detector: a cough/sneeze is a short, loud, isolated burst.
-  // Speech is filtered by (a) requiring a moment of quiet before the burst and
-  // (b) ignoring bursts while the webcam SDK reports the person is talking.
+  // ── Cough & sneeze listener ───────────────────────────────────────────────
+  // A cough/sneeze is a short, loud, isolated burst. Continuous speech is
+  // ignored by requiring a moment of quiet before the burst.
   const MIC = {
-    ONSET_DB:      12,    // jump above the noise floor that starts a sound event
-    MIN_PEAK_DB:   18,    // event must peak this far above the floor
-    MIN_DUR:       0.10,  // seconds
+    ONSET_DB:      12,     // jump above the noise floor that starts a sound event
+    MIN_PEAK_DB:   18,     // event must peak this far above the floor
+    MIN_DUR:       0.10,   // seconds
     MAX_DUR:       1.0,
-    PRE_QUIET_MS:  400,   // quiet needed before a burst (speech is continuous)
-    SEND_EVERY_MS: 30_000,
+    PRE_QUIET_MS:  400,    // quiet needed before a burst
+    SEND_DELAY_MS: 4_000,  // send this soon after something is heard
+    HEARTBEAT_MS:  60_000, // and at least this often while listening
   };
   const mic = {
-    on: false, stream: null, ctx: null, timer: null, sendTimer: null,
-    coughs: 0, sneezes: 0, pendingCoughs: 0, pendingSneezes: 0,
-    windowStart: Date.now(), talkingUntil: 0,
+    on: false, stream: null, ctx: null, timer: null, heartbeat: null, flushTimer: null, sending: false,
+    coughs: 0, sneezes: 0, pendingCoughs: 0, pendingSneezes: 0, windowStart: Date.now(),
   };
   const deviceId = 'laptop-' + userId.slice(0, 8);
 
   function micLog(text) { $('mic-log').textContent = text; }
+  function micSent(text, cls) { $('mic-sent').textContent = text; $('mic-sent').className = 'status-line ' + (cls || ''); }
   function micRender() {
     $('mic-coughs').textContent  = mic.coughs;
     $('mic-sneezes').textContent = mic.sneezes;
@@ -557,14 +345,25 @@
     if (kind === 'cough') { mic.coughs += n; mic.pendingCoughs += n; }
     else                  { mic.sneezes += n; mic.pendingSneezes += n; }
     micRender();
+    micFlushSoon();
   }
+  // Schedule a send a few seconds after the first unsent cough. Later coughs
+  // don't push it back, so steady coughing still reaches the map quickly.
+  function micFlushSoon() {
+    if (!(mic.pendingCoughs + mic.pendingSneezes) || mic.flushTimer) return;
+    mic.flushTimer = setTimeout(() => { mic.flushTimer = null; micSend(); }, MIC.SEND_DELAY_MS);
+  }
+  function micCancelFlush() { clearTimeout(mic.flushTimer); mic.flushTimer = null; }
 
-  async function micSend() {
-    if (!userLocation) { micLog('Waiting for location before sending counts…'); return; }
+  async function micSend({ heartbeat = false } = {}) {
+    if (mic.sending) return;
+    if (!userLocation) { micSent('Waiting for a location before sending…'); return; }
     const coughs = mic.pendingCoughs, sneezes = mic.pendingSneezes;
+    if (!coughs && !sneezes && !heartbeat) return;
     const now = Date.now();
     const windowSec = Math.min(3600, Math.max(1, (now - mic.windowStart) / 1000));
     mic.pendingCoughs = mic.pendingSneezes = 0;
+    mic.sending = true;
     micRender();
     try {
       const r = await postJson('/sensor-events', {
@@ -573,11 +372,17 @@
       });
       if (r.error) throw new Error(r.error);
       mic.windowStart = now;
-      if (coughs + sneezes) scheduleReload();
+      if (coughs + sneezes) micSent(`✓ Sent ${coughs} cough${coughs === 1 ? '' : 's'} and ${sneezes} sneeze${sneezes === 1 ? '' : 's'} to the map at ${clock(now)}`, 'ok');
+      scheduleReload();
     } catch (e) {
-      mic.pendingCoughs += coughs; mic.pendingSneezes += sneezes; // retry next time
+      mic.pendingCoughs += coughs; mic.pendingSneezes += sneezes; // keep them for the next try
       micRender();
-      micLog('Could not send counts (' + e.message + ') — will retry.');
+      micSent(`✗ Couldn't send (${e.message}) — retrying soon.`, 'err');
+      micCancelFlush();
+      mic.flushTimer = setTimeout(() => { mic.flushTimer = null; micSend(); }, 10_000);
+    } finally {
+      mic.sending = false;
+      micFlushSoon(); // anything heard while this request was in flight
     }
   }
 
@@ -586,8 +391,10 @@
       mic.stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       });
-    } catch {
-      micLog('Microphone permission denied. Allow it in the browser and try again.');
+    } catch (e) {
+      micLog(e.name === 'NotAllowedError'
+        ? 'Microphone permission denied — click the 🔒 next to the address bar, allow the microphone, and try again.'
+        : 'Could not open the microphone (' + e.name + ').');
       return;
     }
     mic.ctx = new AudioContext();
@@ -596,8 +403,8 @@
     analyser.smoothingTimeConstant = 0;
     mic.ctx.createMediaStreamSource(mic.stream).connect(analyser);
 
-    const wave = new Float32Array(analyser.fftSize);
-    const spec = new Float32Array(analyser.frequencyBinCount);
+    const wave  = new Float32Array(analyser.fftSize);
+    const spec  = new Float32Array(analyser.frequencyBinCount);
     const binHz = mic.ctx.sampleRate / analyser.fftSize;
     const centroid = () => {
       analyser.getFloatFrequencyData(spec);
@@ -624,7 +431,7 @@
       $('mic-level').style.width = Math.max(0, Math.min(100, over * 3)) + '%';
       $('mic-level').classList.toggle('hot', over > MIC.ONSET_DB);
 
-      if (now - startedAt < 1500) {            // calibrate to the room first
+      if (now - startedAt < 1500) {            // learn the room's background noise first
         noise = 0.8 * noise + 0.2 * db;
         return;
       }
@@ -642,170 +449,98 @@
       if (db > peak) { peak = db; peakCentroid = centroid(); }
       quietFrames = db < noise + MIC.ONSET_DB / 2 ? quietFrames + 1 : 0;
       const dur = (now - evStart) / 1000;
-      if (quietFrames < 5 && dur < 2.5) return;  // event still going
+      if (quietFrames < 5 && dur < 2.5) return;  // still going
 
       inEvent = false;
       lastLoud = now;
       const soundDur = dur - quietFrames * 0.03;
       const verdict =
-        now < mic.talkingUntil                      ? 'talking' :
-        preQuiet < MIC.PRE_QUIET_MS                 ? 'part of speech/noise' :
-        peak - noise < MIC.MIN_PEAK_DB              ? 'too quiet' :
-        soundDur < MIC.MIN_DUR || soundDur > MIC.MAX_DUR ? 'wrong length' :
-        peakCentroid < 400                          ? 'low thud' :
-        (peakCentroid > 2500 && soundDur >= 0.3)    ? 'sneeze' : 'cough';
+        preQuiet < MIC.PRE_QUIET_MS                       ? null :   // part of speech/noise
+        peak - noise < MIC.MIN_PEAK_DB                    ? null :   // too quiet
+        soundDur < MIC.MIN_DUR || soundDur > MIC.MAX_DUR  ? null :   // wrong length
+        peakCentroid < 400                                ? null :   // low thud
+        (peakCentroid > 2500 && soundDur >= 0.3)          ? 'sneeze' : 'cough';
 
-      if (verdict === 'cough' || verdict === 'sneeze') {
+      if (verdict) {
         micCount(verdict);
-        micLog(`Heard a ${verdict} (${soundDur.toFixed(2)} s, +${(peak - noise).toFixed(0)} dB)`);
+        micLog(`Heard a ${verdict} at ${clock(Date.now())}`);
       }
     }, 30);
 
     mic.windowStart = Date.now();
-    mic.sendTimer = setInterval(micSend, MIC.SEND_EVERY_MS);
+    mic.heartbeat = setInterval(() => micSend({ heartbeat: true }), MIC.HEARTBEAT_MS);
     mic.on = true;
     $('mic-btn').textContent = '⏹ Stop listening';
-    micLog('Listening… calibrating to the room for a second.');
+    micLog('Listening… (learning the room’s background noise for a second)');
+    micSend({ heartbeat: true }); // puts this mic on the map right away
   }
 
   async function stopMic() {
-    clearInterval(mic.timer); clearInterval(mic.sendTimer);
+    clearInterval(mic.timer); clearInterval(mic.heartbeat);
     mic.stream?.getTracks().forEach(t => t.stop());
-    await mic.ctx?.close();
+    await mic.ctx?.close().catch(() => {});
     mic.on = false;
     $('mic-btn').textContent = '🎙️ Start listening';
     $('mic-level').style.width = '0';
-    if (mic.pendingCoughs + mic.pendingSneezes) await micSend();
+    micCancelFlush();
+    await micSend();
     micLog('Stopped.');
   }
 
   $('mic-btn').addEventListener('click', () => (mic.on ? stopMic() : startMic()));
 
-  $('fake-cough-btn').addEventListener('click', () => {
-    if (needLocation()) return;
-    withBusy($('fake-cough-btn'), 'Sending…', async () => {
-      micCount('cough', 3);
-      await micSend();
-      micLog('Sent 3 pretend coughs.');
+  // ── Symptom report ────────────────────────────────────────────────────────
+  (async () => {
+    try {
+      const list = await (await fetch('/symptoms')).json();
+      $('symptom-grid').innerHTML = list.map(s =>
+        `<label><input type="checkbox" value="${esc(s.id)}"> ${esc(s.label)}</label>`).join('');
+    } catch {
+      $('symptom-grid').textContent = 'Could not load the symptom list.';
+    }
+  })();
+
+  function describeReport(r) {
+    if (r.error) return ['result-high', 'Error: ' + esc(r.error)];
+    const reasons = r.reasons?.length ? '<br>' + r.reasons.map(esc).join(' · ') : '';
+    if (!r.store)   return ['result-low',  `<strong>Thanks — nothing to flag (score ${r.score})</strong>${reasons}`];
+    if (!r.stored)  return ['result-low',  `<strong>Already counted in the last 12 h</strong> — the map won't double-count you.${reasons}`];
+    return [r.highRisk ? 'result-high' : 'result-low',
+            `<strong>${r.highRisk ? 'Symptoms flagged' : 'Mild symptoms recorded'} (score ${r.score}) — added to the map</strong>${reasons}`];
+  }
+
+  $('report-btn').addEventListener('click', () => {
+    if (!userLocation) return alert('Still finding your location — try again in a few seconds, or pick it on the map.');
+    const symptoms = [...document.querySelectorAll('#symptom-grid input:checked')].map(i => i.value);
+    withBusy($('report-btn'), 'Sending…', async () => {
+      const r = await postJson('/symptom-reports', { userId, lat: userLocation.lat, lng: userLocation.lng, symptoms });
+      showResult($('report-result'), ...describeReport(r));
+      scheduleReload();
     });
   });
 
-  // ── Browser face scan (webcam pulse + breathing, no SDK needed) ───────────
-  const SCAN_SECS = 30;
-  const scan = { stream: null, video: null, samples: [], start: 0, raf: 0, timer: 0, result: null, lastT: -1 };
-  const sctx = $('scan-canvas').getContext('2d', { willReadFrequently: true });
-  // Regions in the 320×240 canvas: skin (forehead + cheeks) and the area below the face
-  const FACE = { x: 125, y: 62, w: 70, h: 80 };
-  const BODY = { x: 80,  y: 196, w: 160, h: 40 };
-
-  function regionMeans(img, box) {
-    let r = 0, g = 0, b = 0, n = 0;
-    for (let y = box.y; y < box.y + box.h; y += 2) {
-      for (let x = box.x; x < box.x + box.w; x += 2) {
-        const i = (y * 320 + x) * 4;
-        r += img[i]; g += img[i + 1]; b += img[i + 2]; n++;
-      }
-    }
-    return { r: r / n, g: g / n, b: b / n };
-  }
-
-  function drawGuide(ok) {
-    sctx.strokeStyle = ok ? 'rgba(110,231,160,0.9)' : 'rgba(255,215,0,0.9)';
-    sctx.lineWidth = 2;
-    sctx.beginPath(); sctx.ellipse(160, 105, 62, 82, 0, 0, 2 * Math.PI); sctx.stroke();
-    sctx.setLineDash([4, 4]);
-    sctx.strokeRect(FACE.x, FACE.y, FACE.w, FACE.h);
-    sctx.setLineDash([]);
-  }
-
-  function scanFrame() {
-    scan.raf = requestAnimationFrame(scanFrame);
-    const v = scan.video;
-    if (!v || v.readyState < 2 || v.currentTime === scan.lastT) return;
-    scan.lastT = v.currentTime;
-    sctx.drawImage(v, 0, 0, 320, 240);
-    const img  = sctx.getImageData(0, 0, 320, 240).data;
-    const face = regionMeans(img, FACE);
-    const body = regionMeans(img, BODY);
-    const lum  = 0.299 * face.r + 0.587 * face.g + 0.114 * face.b;
-    const lit  = lum > 45 && lum < 235;
-    drawGuide(lit);
-    if (!lit) { $('scan-hint').textContent = lum <= 45 ? 'Too dark — face a lamp or window.' : 'Too bright — move out of direct light.'; return; }
-    scan.samples.push({ t: performance.now() / 1000, r: face.r, g: face.g, b: face.b,
-                        body: 0.299 * body.r + 0.587 * body.g + 0.114 * body.b });
-  }
-
-  function scanUpdate(final) {
-    const elapsed = (performance.now() - scan.start) / 1000;
-    $('scan-progress').value = Math.min(elapsed, SCAN_SECS);
-    const est = ViralenseVitals.estimate(scan.samples);
-    if (!est) { if (!final) $('scan-hint').textContent = 'Hold still with your face in the oval…'; return null; }
-    $('scan-bpm').textContent = est.pulseRate ? est.pulseRate.toFixed(0) : '--';
-    $('scan-rpm').textContent = est.breathingRate ? est.breathingRate.toFixed(0) : '…';
-    $('scan-q').textContent   = Math.round(est.pulseConf * 100) + '%';
-    if (!final) $('scan-hint').textContent = `Measuring… ${Math.floor(elapsed)} / ${SCAN_SECS} s — keep still`;
-    return est;
-  }
-
-  function stopCamera() {
-    cancelAnimationFrame(scan.raf); clearInterval(scan.timer);
-    scan.stream?.getTracks().forEach(t => t.stop());
-    scan.stream = null;
-  }
-
-  async function startScan() {
-    $('scan-result').style.display = 'none';
-    $('scan-form').style.display = 'none';
-    try {
-      scan.stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
-    } catch (e) {
-      $('scan-hint').textContent = e.name === 'NotReadableError'
-        ? 'The camera is busy — close Zoom/Teams/Camera app and try again.'
-        : 'Camera permission denied. Allow it in the browser and try again.';
-      return;
-    }
-    scan.video = Object.assign(document.createElement('video'), { muted: true, playsInline: true, srcObject: scan.stream });
-    await scan.video.play();
-    $('scan-empty').style.display = 'none';
-    scan.samples = []; scan.lastT = -1; scan.result = null;
-    scan.start = performance.now();
-    $('scan-btn').disabled = true; $('scan-btn').textContent = 'Scanning…';
-    scanFrame();
-    scan.timer = setInterval(() => {
-      if ((performance.now() - scan.start) / 1000 < SCAN_SECS) { scanUpdate(false); return; }
-      stopCamera();
-      scan.result = scanUpdate(true);
-      $('scan-btn').disabled = false; $('scan-btn').textContent = '📷 Scan again';
-      if (!scan.result || !scan.result.pulseRate || !scan.result.breathingRate) {
-        $('scan-hint').textContent = 'Not enough good video — sit in steady light, face in the oval, and scan again.';
-        return;
-      }
-      $('scan-hint').textContent = scan.result.pulseConf < 0.7
-        ? 'Weak signal — you can submit, but for a trusted reading face the light and hold still.'
-        : 'Done! Answer two quick questions and submit.';
-      $('scan-form').style.display = 'flex';
-    }, 1000);
-  }
-
-  $('scan-btn').addEventListener('click', startScan);
-
-  $('scan-submit').addEventListener('click', () => {
-    if (needLocation() || !scan.result) return;
-    const r = scan.result;
-    withBusy($('scan-submit'), 'Submitting…', async () => {
-      const result = await postJson('/readings', {
-        userId,
-        lat:               userLocation.lat,
-        lng:               userLocation.lng,
-        pulseRate:         r.pulseRate,
-        breathingRate:     r.breathingRate,
-        confidence:        r.pulseConf,
-        durationSec:       Math.round(r.durationSec),
-        exercisedRecently: $('scan-exercised').checked,
-        symptoms:          $('scan-symptoms').checked,
+  // ── Demo tools ────────────────────────────────────────────────────────────
+  $('fake-sick-btn').addEventListener('click', () => {
+    if (!userLocation) return alert('Still finding your location — try again in a few seconds.');
+    withBusy($('fake-sick-btn'), 'Adding…', async () => {
+      const jitter = () => (Math.random() - 0.5) * 0.003; // within a couple of blocks
+      const r = await postJson('/symptom-reports', {
+        userId: 'demo-' + crypto.randomUUID(),               // a new pretend person each click
+        lat: userLocation.lat + jitter(), lng: userLocation.lng + jitter(),
+        symptoms: ['fever', 'cough', 'sore_throat', 'fatigue'],
       });
-      showResult($('scan-result'), result, { lowText: 'Reading looks normal', highText: 'High risk flagged' });
+      showResult($('demo-result'), ...(r.error ? ['result-high', 'Error: ' + esc(r.error)]
+                                               : ['result-high', `<strong>Fake sick person added</strong> (score ${r.score})`]));
       scheduleReload();
+    });
+  });
+
+  $('fake-cough-btn').addEventListener('click', () => {
+    if (!userLocation) return alert('Still finding your location — try again in a few seconds.');
+    withBusy($('fake-cough-btn'), 'Sending…', async () => {
+      mic.coughs += 3; mic.pendingCoughs += 3; micRender();
+      micCancelFlush();
+      await micSend();
     });
   });
 </script>
