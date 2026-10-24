@@ -1,0 +1,5 @@
+ai-edge-litert
+numpy
+scipy
+soundfile
+scikit-learn

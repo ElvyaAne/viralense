@@ -494,22 +494,87 @@
   });
 
   // ── Laptop mic: cough & sneeze listener ───────────────────────────────────
-  // Rough on-device detector: a cough/sneeze is a short, loud, isolated burst.
-  // Speech is filtered by (a) requiring a moment of quiet before the burst and
-  // (b) ignoring bursts while the webcam SDK reports the person is talking.
+  // Loudness finds short bursts, then YAMNet classifies the audio around each one.
+  // Falls back to simple length/pitch rules if the model can't load.
+  // Bursts are ignored while the webcam SDK says the person is talking.
   const MIC = {
     ONSET_DB:      12,    // jump above the noise floor that starts a sound event
     MIN_PEAK_DB:   18,    // event must peak this far above the floor
     MIN_DUR:       0.10,  // seconds
-    MAX_DUR:       1.0,
-    PRE_QUIET_MS:  400,   // quiet needed before a burst (speech is continuous)
+    MAX_DUR:       1.0,   // fallback only
+    PRE_QUIET_MS:  400,   // fallback only: quiet needed before a burst
     SEND_EVERY_MS: 30_000,
+    ML_THRESHOLD:  0.3,   // tuned on ESC-50, see ml/README.md
+    ML_MAX_DUR:    2.0,
+    ML_PAD_SEC:    0.3,
+  };
+  // 1.x sends usage logs to Google, so stay on 0.10.x
+  const YAMNET = {
+    lib:   'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@0.10.35/audio_bundle.mjs',
+    wasm:  'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-audio@0.10.35/wasm',
+    model: 'https://storage.googleapis.com/mediapipe-models/audio_classifier/yamnet/float32/1/yamnet.tflite',
+    COUGH: 42, SNEEZE: 44,
   };
   const mic = {
     on: false, stream: null, ctx: null, timer: null, sendTimer: null,
     coughs: 0, sneezes: 0, pendingCoughs: 0, pendingSneezes: 0,
     windowStart: Date.now(), talkingUntil: 0,
+    classifier: null, ring: null, ringPos: 0, tap: null,
   };
+
+  let classifierPromise = null;
+  function loadClassifier() {
+    classifierPromise ??= (async () => {
+      const { AudioClassifier, FilesetResolver } = await import(YAMNET.lib);
+      const fileset = await FilesetResolver.forAudioTasks(YAMNET.wasm);
+      return AudioClassifier.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: YAMNET.model },
+      });
+    })().catch(e => { classifierPromise = null; throw e; });
+    return classifierPromise;
+  }
+
+  // ring buffer of the last few seconds of mic audio
+  const TAP_WORKLET = `
+    class Tap extends AudioWorkletProcessor {
+      constructor() { super(); this.buf = new Float32Array(2048); this.n = 0; }
+      process(inputs) {
+        const ch = inputs[0][0];
+        if (ch) for (let i = 0; i < ch.length; i++) {
+          this.buf[this.n++] = ch[i];
+          if (this.n === this.buf.length) { this.port.postMessage(this.buf.slice()); this.n = 0; }
+        }
+        return true;
+      }
+    }
+    registerProcessor('viralense-tap', Tap);`;
+
+  function ringWrite(chunk) {
+    const r = mic.ring;
+    for (let i = 0; i < chunk.length; i++) r[(mic.ringPos + i) % r.length] = chunk[i];
+    mic.ringPos = (mic.ringPos + chunk.length) % r.length;
+  }
+  function ringLast(sec) {
+    const r = mic.ring, n = Math.min(r.length, Math.round(sec * mic.ctx.sampleRate));
+    const out = new Float32Array(n);
+    for (let i = 0; i < n; i++) out[i] = r[(mic.ringPos - n + i + r.length) % r.length];
+    return out;
+  }
+
+  function classifyClip(clip) {
+    const results = mic.classifier.classify(clip, mic.ctx.sampleRate);
+    let cough = 0, sneeze = 0, top = { score: 0, categoryName: '?' };
+    for (const r of results) {
+      for (const c of r.classifications[0].categories) {
+        if (c.index === YAMNET.COUGH)  cough  = Math.max(cough, c.score);
+        if (c.index === YAMNET.SNEEZE) sneeze = Math.max(sneeze, c.score);
+        if (c.score > top.score) top = c;
+      }
+    }
+    const best = Math.max(cough, sneeze);
+    const kind = best < MIC.ML_THRESHOLD ? null : cough >= sneeze ? 'cough' : 'sneeze';
+    return { kind, cough, sneeze, top: top.categoryName };
+  }
   const deviceId = 'laptop-' + userId.slice(0, 8);
 
   function micLog(text) { $('mic-log').textContent = text; }
@@ -558,7 +623,25 @@
     const analyser = mic.ctx.createAnalyser();
     analyser.fftSize = 2048;
     analyser.smoothingTimeConstant = 0;
-    mic.ctx.createMediaStreamSource(mic.stream).connect(analyser);
+    const source = mic.ctx.createMediaStreamSource(mic.stream);
+    source.connect(analyser);
+
+    micLog('Loading the cough/sneeze model…');
+    $('mic-btn').disabled = true;
+    try {
+      mic.classifier = await loadClassifier();
+      await mic.ctx.audioWorklet.addModule(
+        URL.createObjectURL(new Blob([TAP_WORKLET], { type: 'text/javascript' })));
+      mic.tap = new AudioWorkletNode(mic.ctx, 'viralense-tap');
+      mic.ring = new Float32Array(Math.round(4 * mic.ctx.sampleRate));
+      mic.ringPos = 0;
+      mic.tap.port.onmessage = (e) => ringWrite(e.data);
+      source.connect(mic.tap);
+    } catch (e) {
+      console.warn('[mic] model unavailable, using simple rules:', e);
+      mic.classifier = null;
+    }
+    $('mic-btn').disabled = false;
 
     const wave = new Float32Array(analyser.fftSize);
     const spec = new Float32Array(analyser.frequencyBinCount);
@@ -611,6 +694,22 @@
       inEvent = false;
       lastLoud = now;
       const soundDur = dur - quietFrames * 0.03;
+      const facts = `${soundDur.toFixed(2)} s, +${(peak - noise).toFixed(0)} dB`;
+
+      if (mic.classifier) {
+        if (now < mic.talkingUntil || peak - noise < MIC.MIN_PEAK_DB ||
+            soundDur < MIC.MIN_DUR || soundDur > MIC.ML_MAX_DUR) return;
+        const clip = ringLast(Math.max(1, dur + MIC.ML_PAD_SEC));
+        const v = classifyClip(clip);
+        if (v.kind) {
+          micCount(v.kind);
+          micLog(`Heard a ${v.kind} (model ${(Math.max(v.cough, v.sneeze) * 100).toFixed(0)}% sure, ${facts})`);
+        } else {
+          micLog(`Ignored a sound: model thinks it was "${v.top}"`);
+        }
+        return;
+      }
+
       const verdict =
         now < mic.talkingUntil                      ? 'talking' :
         preQuiet < MIC.PRE_QUIET_MS                 ? 'part of speech/noise' :
@@ -621,7 +720,7 @@
 
       if (verdict === 'cough' || verdict === 'sneeze') {
         micCount(verdict);
-        micLog(`Heard a ${verdict} (${soundDur.toFixed(2)} s, +${(peak - noise).toFixed(0)} dB)`);
+        micLog(`Heard a ${verdict} (${facts})`);
       }
     }, 30);
 
@@ -629,11 +728,14 @@
     mic.sendTimer = setInterval(micSend, MIC.SEND_EVERY_MS);
     mic.on = true;
     $('mic-btn').textContent = '⏹ Stop listening';
-    micLog('Listening… calibrating to the room for a second.');
+    micLog(mic.classifier
+      ? 'Listening with the cough/sneeze model… calibrating to the room for a second.'
+      : 'Model unavailable, listening with simple rules… calibrating to the room.');
   }
 
   async function stopMic() {
     clearInterval(mic.timer); clearInterval(mic.sendTimer);
+    mic.tap?.disconnect(); mic.tap = null;
     mic.stream?.getTracks().forEach(t => t.stop());
     await mic.ctx?.close();
     mic.on = false;

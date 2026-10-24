@@ -3,3 +3,5 @@ pnpm-lock.yaml
 frontend-example
 .env
 .env.example
+ml/features.npz
+ml/cough-head.json

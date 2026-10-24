@@ -5,7 +5,7 @@ Viralense maps **sickness risk by city zone** so people can see where illness is
 
 1. **Webcam vitals**: a 30-second face scan (Presage SmartSpectra) measures pulse, breathing rate and HRV, and scores them together with a couple of quick questions.
 2. **Self-reported symptoms**: a checklist anyone can fill in on their phone, no camera needed.
-3. **Cough & sneeze listener**: the laptop's built-in microphone listens in the browser and counts **coughs and sneezes** nearby.
+3. **Cough & sneeze listener**: the laptop's built-in microphone listens in the browser and counts **coughs and sneezes** nearby, using the YAMNet sound model ([how it works](ml/README.md)).
 
 Everything runs on one laptop: its webcam for vitals and its mic for coughs. No extra hardware.
 
@@ -37,6 +37,7 @@ Vitals scoring (`src/score.js`) and symptom scoring (`src/symptoms.js`) use the 
 ```
 server.mjs                  Express + WebSocket server, API, optional webcam SDK
 public/index.html           Web app (Leaflet map, heatmap, forms)
+ml/                         Cough/sneeze model notes, evaluation and training scripts
 src/score.js                Vitals → risk score
 src/symptoms.js             Symptom checklist → risk score
 src/sensors.js              Validation for mic cough/sneeze batches
